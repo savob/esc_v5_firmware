@@ -1,7 +1,7 @@
 #include <Arduino.h>
 #include <avr/interrupt.h>
-#include "i2c.h"
-#include "motor.h"
+#include <i2c.h>
+#include <motor.h>
 
 void setup() {
   Serial.begin(115200); // Debugging/testing
