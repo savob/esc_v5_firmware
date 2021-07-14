@@ -68,8 +68,8 @@ void disableMotor();
 
 /** @name buzz
    *  @brief Use this for a buzzes for user awareness. Motor needs to be disabled to work.
-   *  @param  periodMicros Period of buzz tone
-   *  @param  durationMillis Duration of buzz overall
+   *  @param  periodMicros Period of buzz tone in microseconds
+   *  @param  durationMillis Duration of buzz overall in milliseconds
    */
 void buzz(int periodMicros, int durationMillis);
 
