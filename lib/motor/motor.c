@@ -181,16 +181,17 @@ bool enableMotor(byte startDuty) { // Enable motor with specified starting duty,
 }
 void disableMotor() {
 
-  // Disable PWM interrupts
-  TIMSK2 = 0x00;
+  // Disable PWM timer
+  TCA0.SPLIT.CTRLA = 0;
+  TCA0.SPLIT.CTRLB = 0; // No control over output
 
+  // Set all outputs to low
+  PORTC.OUTCLR = PIN3_bm | PIN4_bm | PIN5_bm;
+  PORTB.OUTCLR = PIN0_bm | PIN1_bm | PIN5_bm;
 
-  DDRB  = 0;  // Disable driving pins
-  PORTB = 0;  // Reset outputs
-
-  // Disable BEMF systems
-  ACSR = 0x00;    // Disable analog interrupts
-  TIMSK1 = 0x00;  // Disable BEMF timer
+  // Disable Analog Comparator (BEMF)
+  AC1.CTRLA = 0; 
+  AC1.INTCTRL = 0; // Disable analog comparator interrupt
 
   duty = 0;
   motorStatus = false;
