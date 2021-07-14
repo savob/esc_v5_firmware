@@ -4,8 +4,6 @@
 #include <motor.h>
 
 void setup() {
-  Serial.begin(115200); // Debugging/testing
-
   // Input / config pins
   DDRD  &= 0x03;  // Configure all input pins as inputs
   PORTD &= 0x03;  // Clear all input pullups
@@ -40,7 +38,6 @@ void setup() {
 
   disableMotor(); // Ensure motor is disabled at start
 
-  Serial.println(F("START"));
 }
 
 
@@ -48,33 +45,10 @@ void setup() {
 void loop() {
 
   if (test2) { // Debugging printer
-    Serial.println(F("xxx"));
     test2 = false;
     //Serial.println(sequenceStep);
 
     delay(5);
-  }
-  
-  if (Serial.available()) {
-    Serial.print(F("Current motor status: "));
-    Serial.println(motorStatus);
-    Serial.print(F("Current duty value is "));
-    Serial.println(duty);
-    
-    int temp = Serial.parseInt();
-    temp = constrain(temp, 0 , period);
-    Serial.print(F("Input PWM was read as "));
-    Serial.println(temp);
-    
-    enableMotor(temp);
-
-    Serial.print(F("Resulting motor status: "));
-    Serial.println(motorStatus);
-    Serial.print(F("Resulting duty value is "));
-    Serial.println(duty);
-    Serial.println();
-    
-    delay(10000); // Run for a short period for now
   }
 
   disableMotor();
