@@ -83,14 +83,14 @@ ISR(TIMER2_COMPB_vect) {
   else PORTB = 0;
 }
 
-void setPWMDuty(byte temp) { // Set the duty of the motor PWM
+void setPWMDuty(byte deisredDuty) { // Set the duty of the motor PWM
   // Checks if input is at either extreme, clamps accordingly
-  if (temp < endClampThreshold) {
+  if (deisredDuty < endClampThreshold) {
     // Low extreme, disable motor
     duty = 0;
     disableMotor();
   }
-  else if (temp >= (period - endClampThreshold)) {
+  else if (deisredDuty >= (period - endClampThreshold)) {
     // High extreme, clamp to on
     duty = period;
 
@@ -100,7 +100,7 @@ void setPWMDuty(byte temp) { // Set the duty of the motor PWM
   }
   else {
     // Normal range
-    duty = temp;
+    duty = deisredDuty;
     nDuty = period - duty; // Set downwards cycle as well
 
     // Enable PWM interrupts

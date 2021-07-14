@@ -39,13 +39,34 @@ extern const unsigned int minBuzzPeriod;
 ////////////////////////////////////////////////////////////
 // Function declarations
 
+/** @name Set PWM Duty
+   *  @brief Set the PWM duty of the motor
+   *  @param deisredDuty Desired duty
+   */
+void setPWMDuty(byte deisredDuty);
 
-void setPWMDuty(byte temp);
-
+/** @name Motor enable
+   *  @brief Use this to enable the motor
+   *  @param startDuty Motor duty to start with
+   *  @return Returns true if the motor was enabled without issue
+   */
 bool enableMotor(byte startDuty);
+
+/** @name Motor windup
+   *  @brief Winds up the motor to start spinning
+   */
 void windUpMotor();
+
+/** @name Motor disable
+   *  @brief Disables motor
+   */
 void disableMotor();
 
+/** @name Buzz
+   *  @brief Use this for a buzzes for user awareness. Motor needs to be disabled to work.
+   *  @param  periodMicros Period of buzz tone
+   *  @param  durationMillis Duration of buzz overall
+   */
 void buzz(int periodMicros, int durationMillis);
 
 void AH_BL();
