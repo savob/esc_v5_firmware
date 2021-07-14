@@ -7,9 +7,6 @@ byte currentInstruction = 0;
 void i2cRecieve(int howMany) {
   currentInstruction = Wire.read();
 
-  Serial.print(F("Recieved: "));
-  Serial.println(currentInstruction);
-
   // Check for KILL ORDER
   if (currentInstruction == 0) {
     disableMotor();
@@ -22,45 +19,33 @@ void i2cRecieve(int howMany) {
   switch (currentInstruction) {
     case 1:
       // Reverse, read only
-      Serial.print(F("Reverse: "));
-      Serial.println(reverse);
       break;
     case 2:
       // Duty, set if another byte present
       if (Wire.available()) {
         enableMotor(Wire.read());
       }
-      Serial.print(F("Duty: "));
-      Serial.println(duty);
       break;
     case 3:
       // Current RPM, read only
-      Serial.print(F("Current RPM: "));
-      Serial.println(currentRPM);
       break;
     case 4:
       // Control scheme
       if (Wire.available()) {
         controlScheme = Wire.read();
       }
-      Serial.print(F("Control Scheme: "));
-      Serial.println(controlScheme);
       break;
     case 5:
       // Target RPM
       if (Wire.available()) {
         targetRPM = readWordWire(); // Read
       }
-      Serial.print(F("Target RPM: "));
-      Serial.println(targetRPM);
       break;
     case 6:
       // Number of cycles in a rotation
       if (Wire.available()) {
         cyclesPerRotation = Wire.read();
       }
-      Serial.print(F("Cycles per rotation: "));
-      Serial.println(cyclesPerRotation);
       break;
     case 7:
       if (Wire.available()) motorStatus = Wire.read();
@@ -68,9 +53,7 @@ void i2cRecieve(int howMany) {
       // Enable or disable motor
       if (motorStatus) enableMotor(endClampThreshold + 1); // Set motor to minimum
       else disableMotor();
-
-      Serial.print(F("motorStatus: "));
-      Serial.println(motorStatus);
+      
       break;
   }
 
