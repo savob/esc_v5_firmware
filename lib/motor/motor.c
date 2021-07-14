@@ -205,22 +205,6 @@ void disableMotor() {
 
 // The ISR vector of the Analog comparator
 ISR (ANALOG_COMP_vect) {
-
-  // We hold until the comparator output matches 10 times to be sure
-  // Use ACO as our check bit for comparison value
-  //    for (byte i = 0; i < 10; i++) {
-  //
-  //      // Check config register for if we're looking for a rising edge
-  //      if ((ACSR & 0x03) == 0x03) {
-  //        // If we're looking a rising edge, wait until a steady low is found
-  //        if (!(ACSR & B00100000)) i = 0; // ACO = 0 (Analog Comparator Output = 0)
-  //      }
-  //      else {
-  //        //If looking for falling
-  //        if ((ACSR & B00100000))  i = 0; // ACO = 1 (Analog Comparator Output = 1)
-  //      }
-  //    }
-
   OCR1A = 2 * TCNT1;
 }
 
@@ -263,7 +247,6 @@ ISR(TIMER1_COMPA_vect) {
 
 
 // Buzzer function.
-// Buzzes with a period specified in microseconds for a duration of certain milliseconds
 void buzz(int periodMicros, int durationMillis) { // Buzz with a period of
   if (motorStatus) return; // Will not run if motor is enabled and spinning.
   // It would [greatly] suck if the drone "buzzed" mid-flight
