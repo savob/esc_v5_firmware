@@ -319,36 +319,29 @@ void CH_BL() {
   PORTB = B00000110;
 }
 
-/* Since we are comparing to relative the positive terminal, our edges have to be reversed
+// Comparator functions
 
-  E.g. If A is rising it will go from being less than the zero to more.
-  Since A is connected to the negative terminal, the comparator output will go from 1 to 0
-
-  So although we are looking for a rising edge, our microcontroller will see a falling one
-
-  NOTE THAT ALL THESE WILL ENABLE THE COMPARATOR INTERRUPT!
-*/
 void BEMF_A_RISING() {
-  ADMUX = 0;                // Select A0 as comparator negative input
-  ACSR  = 0x0A;             // Set interrupt on falling edge
+  AC1.MUXCTRLA = 0x08;
+  AC1.CTRLA = AC_ENABLE_bm | AC_HYSMODE_25mV_gc | AC_INTMODE_POSEDGE_gc;
 }
 void BEMF_A_FALLING() {
-  ADMUX = 0;                // Select A0 as comparator negative input
-  ACSR  = 0x0B;             // Set interrupt on rising edge
+  AC1.MUXCTRLA = 0x08;
+  AC1.CTRLA = AC_ENABLE_bm | AC_HYSMODE_25mV_gc | AC_INTMODE_NEGEDGE_gc;
 }
 void BEMF_B_RISING() {
-  ADMUX = 1;                // Select A1 as comparator negative input
-  ACSR  = 0x0A;             // Set interrupt on falling edge
+  AC1.MUXCTRLA = 0x00;
+  AC1.CTRLA = AC_ENABLE_bm | AC_HYSMODE_25mV_gc | AC_INTMODE_POSEDGE_gc;
 }
 void BEMF_B_FALLING() {
-  ADMUX = 1;                // Select A1 as comparator negative input
-  ACSR  = 0x0B;             // Set interrupt on rising edge
+  AC1.MUXCTRLA = 0x00;
+  AC1.CTRLA = AC_ENABLE_bm | AC_HYSMODE_25mV_gc | AC_INTMODE_NEGEDGE_gc;
 }
 void BEMF_C_RISING() {
-  ADMUX = 2;                // Select A2 as comparator negative input
-  ACSR  = 0x0A;             // Set interrupt on falling edge
+  AC1.MUXCTRLA = 0x10;
+  AC1.CTRLA = AC_ENABLE_bm | AC_HYSMODE_25mV_gc | AC_INTMODE_POSEDGE_gc;
 }
 void BEMF_C_FALLING() {
-  ADMUX = 2;                // Select A2 as comparator negative input
-  ACSR  = 0x0B;             // Set interrupt on rising edge
+  AC1.MUXCTRLA = 0x10;
+  AC1.CTRLA = AC_ENABLE_bm | AC_HYSMODE_25mV_gc | AC_INTMODE_NEGEDGE_gc;
 }

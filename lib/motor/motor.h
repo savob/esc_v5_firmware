@@ -81,18 +81,10 @@ void BH_AL();
 void CH_AL();
 void CH_BL();
 
-/* Since we are comparing to relative the positive terminal, our edges have to be reversed
-
-  E.g. If A is rising it will go from being less than the zero to more.
-  Since A is connected to the negative terminal, the comparator output will go from 1 to 0
-
-  So although we are looking for a rising edge, our microcontroller will see a falling one
-
-  NOTE THAT ALL THESE WILL ENABLE THE COMPARATOR INTERRUPT!
-*/
-void BEMF_A_RISING();
-void BEMF_A_FALLING();
-void BEMF_B_RISING();
-void BEMF_B_FALLING();
-void BEMF_C_RISING();
-void BEMF_C_FALLING();
+// Comparator configuration functions 
+void BEMF_A_RISING();   // Set AC to interrupt on A rising edge 
+void BEMF_A_FALLING();  // Set AC to interrupt on A falling edge 
+void BEMF_B_RISING();   // Set AC to interrupt on B rising edge 
+void BEMF_B_FALLING();  // Set AC to interrupt on B falling edge 
+void BEMF_C_RISING();   // Set AC to interrupt on C rising edge 
+void BEMF_C_FALLING();  // Set AC to interrupt on C falling edge 
