@@ -6,9 +6,8 @@ extern volatile bool motorUpslope; // Used for PWM
 extern volatile bool test2;
 
 // PWM variables
-extern volatile byte period;           // MUST be less than 254
+extern volatile byte maxDuty;           // Upper limit to PWM (MUST be less than 254)
 extern volatile byte duty;
-extern volatile byte nDuty;  // Used to store the "inverse" duty, to reduce repeated operations withinm the interupt to calculate this
 extern byte endClampThreshold;           // Stores how close you need to be to either extreme before the PWM duty is clamped to that extreme
 
 // AH_BL, AH_ CL, BH_CL, BH_AL, CH_AL, CH_BL

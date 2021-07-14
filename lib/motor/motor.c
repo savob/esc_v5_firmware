@@ -6,9 +6,8 @@ volatile bool motorUpslope = true; // Used for PWM
 volatile bool test2 = false;
 
 // PWM variables
-volatile byte period = 249;           // MUST be less than 254
+volatile byte maxDuty = 249;           // MUST be less than 254
 volatile byte duty = 100;
-volatile byte nDuty = 149;  // Used to store the "inverse" duty, to reduce repeated operations withinm the interupt to calculate this
 byte endClampThreshold = 15;           // Stores how close you need to be to either extreme before the PWM duty is clamped to that extreme
 
 // AH_BL, AH_ CL, BH_CL, BH_AL, CH_AL, CH_BL
@@ -50,8 +49,8 @@ void setupMotor() {
   
   //==============================================
   // Set up PWM
-  TCA0.SPLIT.LPER = 0xFF; // Count all the way down from 255 on all timers
-  TCA0.SPLIT.HPER = 0xFF; 
+  TCA0.SPLIT.LPER = maxDuty; // Set upper duty limit
+  TCA0.SPLIT.HPER = maxDuty; 
   TCA0.SPLIT.CTRLESET = TCA_SPLIT_CMD_RESTART_gc | 0x03; // Reset both timers
   TCA0.SPLIT.CTRLA = TCA_SPLIT_CLKSEL_DIV16_gc | TCA_SPLIT_ENABLE_bm; // Enable the timer with prescaler of 16
 
@@ -84,54 +83,27 @@ void windUpMotor() {
   }
 }
 
-// Motor PWM interupts
-// Used to create a software version of phase correct PWM
-ISR(TIMER2_COMPA_vect) {
-  // Hit the half period mark
-
-  motorUpslope = !(motorUpslope); // Invert "direction"
-
-  // Set duty according to if we ar on the "upslope" or not
-  if (motorUpslope) {
-    OCR2B = nDuty;
-  }
-  else {
-    OCR2B = duty;
-    PORTB = motorPortSteps[sequenceStep]; // Set motor stage, used primarily for 100% duty cycle
-  }
-}
-
-ISR(TIMER2_COMPB_vect) {
-  // Toggle output
-  // On when ticking up, off when going down
-
-  if (motorUpslope) PORTB = motorPortSteps[sequenceStep];
-  else PORTB = 0;
-}
 
 void setPWMDuty(byte deisredDuty) { // Set the duty of the motor PWM
-  // Checks if input is at either extreme, clamps accordingly
+  
+  // Checks if input is too low and disables if needed
   if (deisredDuty < endClampThreshold) {
-    // Low extreme, disable motor
-    duty = 0;
     disableMotor();
+    return;
   }
-  else if (deisredDuty >= (period - endClampThreshold)) {
-    // High extreme, clamp to on
-    duty = period;
 
-    // Disable PWM duty interrupt
-    TIMSK2 = 0x02;
-    // COMPA is used to update outputs to current motor step
-  }
-  else {
-    // Normal range
-    duty = deisredDuty;
-    nDuty = period - duty; // Set downwards cycle as well
+  // Check and clamp if near the high extreme
+  if (deisredDuty >= (maxDuty - endClampThreshold)) duty = maxDuty; 
+  else duty = deisredDuty;
 
-    // Enable PWM interrupts
-    TIMSK2 = 0x06;  // Interrupt for COMP A and B matches
-  }
+  // Assign duty to all outputs
+  TCA0.SPLIT.LCMP0 = duty;
+  TCA0.SPLIT.LCMP1 = duty;
+  TCA0.SPLIT.LCMP2 = duty;
+  TCA0.SPLIT.HCMP0 = duty;
+  TCA0.SPLIT.HCMP1 = duty;
+  TCA0.SPLIT.HCMP2 = duty;
+  TCA0.SPLIT.CTRLESET = TCA_SPLIT_CMD_RESTART_gc | 0x03; // Reset both timers to syncronize them
 }
 
 bool enableMotor(byte startDuty) { // Enable motor with specified starting duty, returns false if duty is too low
@@ -192,7 +164,7 @@ void disableMotor() {
 }
 
 
-// The ISR vector of the Analog comparator
+// The ISR vector of the Analog comparator used to mark next communtation
 ISR (ANALOG_COMP_vect) {
   OCR1A = 2 * TCNT1;
 }
