@@ -43,8 +43,13 @@ void setupMotor() {
   reverse = ((PORTA.IN & PIN4_bm) == 0);
 
   //==============================================
-  // Set up hardware PWM
+  // Set up output pins
   PORTMUX.CTRLC = PORTMUX_TCA05_bm | PORTMUX_TCA04_bm | PORTMUX_TCA03_bm | PORTMUX_TCA02_bm; // Multiplexed outputs
+  PORTC.DIRSET = PIN3_bm | PIN4_bm | PIN5_bm; // Set pins to be outputs
+  PORTB.DIRSET = PIN0_bm | PIN1_bm | PIN5_bm;
+  
+  //==============================================
+  // Set up PWM
   TCA0.SPLIT.LPER = 0xFF; // Count all the way down from 255 on all timers
   TCA0.SPLIT.HPER = 0xFF; 
   TCA0.SPLIT.CTRLESET = TCA_SPLIT_CMD_RESTART_gc | 0x03; // Reset both timers
