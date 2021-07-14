@@ -142,26 +142,15 @@ bool enableMotor(byte startDuty) { // Enable motor with specified starting duty,
     return (false);
   }
 
-  // Configure half-bridge driver pins
-  DDRB  |= 0x3F;  // Set pins to be driven
-  PORTB &= 0xC0;  // Reset outputs
-
   if (motorStatus == false) windUpMotor(); // Wind up motor if not already spinning
 
-  //Timer 2 setup for software "phase correct" PWM
-  // CTC, 8x prescaling, no output on pins
-  TCCR2A = 0x02;
-  TCCR2B = 0x02;
-  TIMSK2 = 0x06;  // Interrupt for COMP A and B matches
+  // Enable PWM timers
+  TCA0.SPLIT.CTRLESET = TCA_SPLIT_CMD_RESTART_gc | 0x03; // Reset both timers
+  TCA0.SPLIT.CTRLA = TCA_SPLIT_CLKSEL_DIV16_gc | TCA_SPLIT_ENABLE_bm; // Enable the timer with prescaler of 16
 
-  OCR2A = period; // Set PWM parameters
-  OCR2B = duty;
-  TCNT2 = 0;      // Reset counter
-
-  ///////////////////////////
-  // BEMF Configuration
-  // Enable analog comparator interrupt flag, start by looking for falling edge
-  ACSR = 0x08;
+  // Enable analog comparator
+  AC1.INTCTRL = AC_CMP_bm; // Enable analog comparator interrupt
+  AC1.CTRLA = AC_ENABLE_bm | AC_HYSMODE_25mV_gc; // Enable the AC with a 25mV hysteresis
 
   /* Timer 1 setup for phase changes
     Since the zero crossing event happens halfway through the step I will set timer 1 to zero at
