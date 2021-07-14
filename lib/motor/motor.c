@@ -34,7 +34,30 @@ const unsigned int spinUpPeriodDecrement = 10;
 const unsigned int maxBuzzPeriod = 2000;
 const unsigned int minBuzzPeriod = 200;
 
+void setupMotor() {
+  //==============================================
+  // Read in if we're reversing the motor (pin PA4 is shorted)
+  PORTA.DIRCLR = PIN4_bm;
+  PORTA.PIN4CTRL = PORT_PULLUPEN_bm; // Set it have a pull up
+  delayMicroseconds(100); // Allow outputs to settle before reading
+  reverse = ((PORTA.IN & PIN4_bm) == 0);
 
+  //==============================================
+  // Set up hardware PWM
+  PORTMUX.CTRLC = PORTMUX_TCA05_bm | PORTMUX_TCA04_bm | PORTMUX_TCA03_bm | PORTMUX_TCA02_bm; // Multiplexed outputs
+  TCA0.SPLIT.LPER = 0xFF; // Count all the way down from 255 on all timers
+  TCA0.SPLIT.HPER = 0xFF; 
+  TCA0.SPLIT.CTRLESET = TCA_SPLIT_CMD_RESTART_gc | 0x03; // Reset both timers
+  TCA0.SPLIT.CTRLA = TCA_SPLIT_CLKSEL_DIV16_gc | TCA_SPLIT_ENABLE_bm; // Enable the timer with prescaler of 16
+
+  //==============================================
+  // Analog comparator setting
+  AC1.INTCTRL = 0; // Disable analog comparator interrupt
+  AC1.MUXCTRLA = AC_MUXNEG0_bm; // Set negative reference to be Zero pin (PA5)
+  AC1.CTRLA = AC_ENABLE_bm | AC_HYSMODE_25mV_gc; // Enable the AC with a 25mV hysteresis
+
+  disableMotor(); // Ensure motor is disabled at start
+}
 
 void windUpMotor() {
   // Forces the motor to spin up to a decent speed before running motor normally.
@@ -54,8 +77,6 @@ void windUpMotor() {
     }
     period -= spinUpPeriodDecrement;
   }
-
-  Serial.println(F("WINDUP DONE"));
 }
 
 // Motor PWM interupts
