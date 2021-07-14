@@ -14,17 +14,7 @@ void setup() {
   // Sets reverse to true if reverse pin is shorted
   reverse = ((PIND & 0x80) == 0);
 
-  // Read I2C address settings
-  byte temp = PIND & 0x38;  // Extract the 3 bits for setting
-  temp ^= 0x38;             // Flips the bits (since I am shorting the pads I want to set as "1"
-  temp = temp >> 3;         // Shift so bits are in spots 0 to 2 inclusive (0 to 7 decimal value)
-  i2cAddress += temp;       // Add offest to default value
-
-  Wire.begin(i2cAddress);
-  Wire.onRequest(i2cRequest);
-  Wire.onReceive(i2cRecieve);
-  //  Serial.print("I2C Address of ESC is ");
-  //  Serial.println(i2cAddress);
+  i2cSetup(); // Set up I2C inteface
 
   // Disable pull-up resistors
   MCUCR |= (1 << PUD);

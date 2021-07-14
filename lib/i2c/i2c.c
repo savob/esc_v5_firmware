@@ -1,8 +1,30 @@
 #include "i2c.h"
 
-byte i2cAddress = 10;      // I2C address. Starts with this default, then adds offset according to soldering pads
+byte i2cAddress = 10;      // I2C address. Starts with a default, then adds offset according to soldering pads
 byte currentInstruction = 0;
 
+void i2cSetup() {
+  // Read I2C address settings from the pins PC0, PC1, and PC2
+  // Set them as inputs with pullups enabled
+  PORTC.DIRCLR = 0x07; 
+  PORTC.PIN0CTRL = PORT_PULLUPEN_bm; 
+  PORTC.PIN1CTRL = PORT_PULLUPEN_bm;
+  PORTC.PIN2CTRL = PORT_PULLUPEN_bm;
+
+  delayMicroseconds(100); // Minor delay for pullups to engage and settle on a value
+
+  // Read the address from these pins
+  byte temp = PORTC.IN & 0x07;  // Extract the 3 bits for setting
+  temp ^= 0x07;       // Flips the bits (since I am shorting the pads I want to set as "1")
+  i2cAddress += temp; // Add offest to default value
+
+  PORTMUX.CTRLB = PORTMUX_TWI0_bm; // Multiplex the I2C/TWI to use the alternate pins
+
+  // Start the I2C interface 
+  Wire.begin(i2cAddress);
+  Wire.onRequest(i2cRequest);
+  Wire.onReceive(i2cRecieve);
+}
 
 void i2cRecieve(int howMany) {
   currentInstruction = Wire.read();
