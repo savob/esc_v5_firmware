@@ -201,27 +201,29 @@ void buzz(int periodMicros, int durationMillis) { // Buzz with a period of
   // Ensure period is in allowed tolerances
   periodMicros = constrain(periodMicros, minBuzzPeriod, maxBuzzPeriod);
 
-  // Buzz works by powering one motor phase for 50 us then holding off
-  // for the remainder of half the period, then fires another phase for
-  // 50 us before holding for the rest of the period
+  /*
+    Buzz works by powering one motor phase (AHBL) for 50 us then holding off
+    for the remainder of half the period, then fires another phase (AHCL)
+    for 50 us before holding for the rest of the period.
+  */
 
   int holdOff = (periodMicros / 2) - 50;                  // Gets this holdoff period
   unsigned long endOfBuzzing = millis() + durationMillis; // Marks endpoint
 
-  // Set up motor port (we don't need the PWM stuff)
-  PORTB &= 0xC0;  // Reset outputs
-  DDRB  |= 0x3F;  // Set pins to be driven
+  allFloat(); // Ensure we start floating
 
   // Buzz for the duration
   while (millis() < endOfBuzzing) {
-    PORTB = motorPortSteps[0];
+    PORTB.OUTSET = PIN5_bm;
+    PORTC.OUTSET = PIN3_bm;
     delayMicroseconds(50);
-    PORTB = 0;
+    allFloat();
     delayMicroseconds(holdOff);
 
-    PORTB = motorPortSteps[1];
+    PORTB.OUTSET = PIN5_bm;
+    PORTC.OUTSET = PIN5_bm;
     delayMicroseconds(50);
-    PORTB = 0;
+    allFloat();
     delayMicroseconds(holdOff);
   }
 
