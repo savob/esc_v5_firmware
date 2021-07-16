@@ -60,6 +60,8 @@ void setupMotor() {
   AC1.MUXCTRLA = AC_MUXNEG0_bm; // Set negative reference to be Zero pin (PA5)
   AC1.CTRLA = AC_ENABLE_bm | AC_HYSMODE_25mV_gc; // Enable the AC with a 25mV hysteresis
 
+  CPUINT.LVL1VEC = TCB0_INT_vect_num; // Elevates the communtation interrupt to be prioritized
+
   disableMotor(); // Ensure motor is disabled at start
 }
 
@@ -158,7 +160,7 @@ void disableMotor() {
   motorStatus = false;
 }
 
-ISR(TIMER1_COMPA_vect) {
+ISR(TCB0_INT_vect) {
   // Set next step
   sequenceStep++;                    // Increment step by 1, next part in the sequence of 6
   sequenceStep %= 6;                 // If step > 5 (equal to 6) then step = 0 and start over
@@ -191,8 +193,6 @@ ISR(TIMER1_COMPA_vect) {
       //Serial.println("CH BL AR");
       break;
   }
-  
-  OCR1A = 65535; // Set to max
 }
 
 
