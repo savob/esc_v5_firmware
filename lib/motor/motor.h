@@ -73,17 +73,18 @@ void disableMotor();
    */
 void buzz(int periodMicros, int durationMillis);
 
-void AH_BL();
-void AH_CL();
-void BH_CL();
-void BH_AL();
-void CH_AL();
-void CH_BL();
+void AHBL();      // Set A high, B low, C floating
+void AHCL();      // Set A high, C low, B floating
+void BHCL();      // Set B high, C low, A floating
+void BHAL();      // Set B high, A low, C floating
+void CHAL();      // Set C high, A low, B floating
+void CHBL();      // Set C high, B low, A floating
 
 // Comparator configuration functions 
-void BEMF_A_RISING();   // Set AC to interrupt on A rising edge 
-void BEMF_A_FALLING();  // Set AC to interrupt on A falling edge 
-void BEMF_B_RISING();   // Set AC to interrupt on B rising edge 
-void BEMF_B_FALLING();  // Set AC to interrupt on B falling edge 
-void BEMF_C_RISING();   // Set AC to interrupt on C rising edge 
-void BEMF_C_FALLING();  // Set AC to interrupt on C falling edge 
+
+void aRisingBEMF();   // Set AC to interrupt on A rising edge 
+void aFallingBEMF();  // Set AC to interrupt on A falling edge 
+void bRisingBEMF();   // Set AC to interrupt on B rising edge 
+void bFallingBEMF();  // Set AC to interrupt on B falling edge 
+void cRisingBEMF();   // Set AC to interrupt on C rising edge 
+void cFallingBEMF();  // Set AC to interrupt on C falling edge 

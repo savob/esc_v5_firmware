@@ -121,7 +121,6 @@ bool enableMotor(byte startDuty) { // Enable motor with specified starting duty,
   TCA0.SPLIT.CTRLA = TCA_SPLIT_CLKSEL_DIV16_gc | TCA_SPLIT_ENABLE_bm; // Enable the timer with prescaler of 16
 
   // Enable analog comparator
-  AC1.INTCTRL = AC_CMP_bm; // Enable analog comparator interrupt
   AC1.CTRLA = AC_ENABLE_bm | AC_HYSMODE_25mV_gc; // Enable the AC with a 25mV hysteresis
 
   /* Timer 1 setup for phase changes
@@ -157,16 +156,9 @@ void disableMotor() {
 
   // Disable Analog Comparator (BEMF)
   AC1.CTRLA = 0; 
-  AC1.INTCTRL = 0; // Disable analog comparator interrupt
 
   duty = 0;
   motorStatus = false;
-}
-
-
-// The ISR vector of the Analog comparator used to mark next communtation
-ISR (ANALOG_COMP_vect) {
-  OCR1A = 2 * TCNT1;
 }
 
 ISR(TIMER1_COMPA_vect) {
@@ -178,27 +170,27 @@ ISR(TIMER1_COMPA_vect) {
   
   switch (sequenceStep) {
     case 0:
-      BEMF_C_FALLING();
+      cFallingBEMF();
       //Serial.println("AH BL CF");
       break;
     case 1:
-      BEMF_B_RISING();
+      bRisingBEMF();
       //Serial.println("AH CL BR");
       break;
     case 2:
-      BEMF_A_FALLING();
+      aFallingBEMF();
       //Serial.println("BH CL AF");
       break;
     case 3:
-      BEMF_C_RISING();
+      cRisingBEMF();
       //Serial.println("BH AL CR");
       break;
     case 4:
-      BEMF_B_FALLING();
+      bFallingBEMF();
       //Serial.println("CH AL BF");
       break;
     case 5:
-      BEMF_A_RISING();
+      aRisingBEMF();
       //Serial.println("CH BL AR");
       break;
   }
@@ -244,48 +236,42 @@ void buzz(int periodMicros, int durationMillis) { // Buzz with a period of
 
 
 // Update these to set PWM on high side once reworked
-void AH_BL() {
+void AHBL() {
   PORTB = B00100100;
 }
-void AH_CL() {
+void AHCL() {
   PORTB = B00100001;
 }
-void BH_CL() {
+void BHCL() {
   PORTB = B00001001;
 }
-void BH_AL() {
+void BHAL() {
   PORTB = B00011000;
 }
-void CH_AL() {
+void CHAL() {
   PORTB = B00010010;
 }
-void CH_BL() {
+void CHBL() {
   PORTB = B00000110;
 }
 
 // Comparator functions
 
-void BEMF_A_RISING() {
+void aRisingBEMF() {
   AC1.MUXCTRLA = 0x08;
-  AC1.CTRLA = AC_ENABLE_bm | AC_HYSMODE_25mV_gc | AC_INTMODE_POSEDGE_gc;
 }
-void BEMF_A_FALLING() {
+void aFallingBEMF() {
   AC1.MUXCTRLA = 0x08;
-  AC1.CTRLA = AC_ENABLE_bm | AC_HYSMODE_25mV_gc | AC_INTMODE_NEGEDGE_gc;
 }
-void BEMF_B_RISING() {
+void bRisingBEMF() {
   AC1.MUXCTRLA = 0x00;
-  AC1.CTRLA = AC_ENABLE_bm | AC_HYSMODE_25mV_gc | AC_INTMODE_POSEDGE_gc;
 }
-void BEMF_B_FALLING() {
+void bFallingBEMF() {
   AC1.MUXCTRLA = 0x00;
-  AC1.CTRLA = AC_ENABLE_bm | AC_HYSMODE_25mV_gc | AC_INTMODE_NEGEDGE_gc;
 }
-void BEMF_C_RISING() {
+void cRisingBEMF() {
   AC1.MUXCTRLA = 0x10;
-  AC1.CTRLA = AC_ENABLE_bm | AC_HYSMODE_25mV_gc | AC_INTMODE_POSEDGE_gc;
 }
-void BEMF_C_FALLING() {
+void cFallingBEMF() {
   AC1.MUXCTRLA = 0x10;
-  AC1.CTRLA = AC_ENABLE_bm | AC_HYSMODE_25mV_gc | AC_INTMODE_NEGEDGE_gc;
 }
