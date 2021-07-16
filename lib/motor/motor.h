@@ -1,5 +1,7 @@
 #include <Arduino.h>
 
+typedef void(*voidFunctionPointer)(); // Used for making commutation arrays
+
 extern volatile byte sequenceStep; // Stores step in spinning sequence
 
 extern volatile bool motorUpslope; // Used for PWM
@@ -11,7 +13,8 @@ extern volatile byte duty;
 extern byte endClampThreshold;           // Stores how close you need to be to either extreme before the PWM duty is clamped to that extreme
 
 // AH_BL, AH_ CL, BH_CL, BH_AL, CH_AL, CH_BL
-extern volatile byte motorPortSteps[6];
+extern volatile voidFunctionPointer motorSteps[6];
+extern volatile voidFunctionPointer bemfSteps[6];
 
 // Other variables
 extern volatile byte cyclesPerRotation;

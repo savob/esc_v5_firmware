@@ -41,6 +41,39 @@ void setupMotor() {
   delayMicroseconds(100); // Allow outputs to settle before reading
   reverse = ((PORTA.IN & PIN4_bm) == 0);
 
+  // Setup the commutation steps based on direction
+  if (reverse == false) {
+    motorSteps[0] = AHBL;
+    motorSteps[1] = AHCL;
+    motorSteps[2] = BHCL;
+    motorSteps[3] = BHAL;
+    motorSteps[4] = CHAL;
+    motorSteps[5] = CHBL;
+
+    bemfSteps[0] = cFallingBEMF;
+    bemfSteps[1] = bRisingBEMF;
+    bemfSteps[2] = aFallingBEMF;
+    bemfSteps[3] = cRisingBEMF;
+    bemfSteps[4] = bFallingBEMF;
+    bemfSteps[5] = aRisingBEMF;
+  }
+  else {
+    // TODO: Reverse these
+    motorSteps[0] = AHBL;
+    motorSteps[1] = AHCL;
+    motorSteps[2] = BHCL;
+    motorSteps[3] = BHAL;
+    motorSteps[4] = CHAL;
+    motorSteps[5] = CHBL;
+
+    bemfSteps[0] = cFallingBEMF;
+    bemfSteps[1] = bRisingBEMF;
+    bemfSteps[2] = aFallingBEMF;
+    bemfSteps[3] = cRisingBEMF;
+    bemfSteps[4] = bFallingBEMF;
+    bemfSteps[5] = aRisingBEMF;
+  }
+
   //==============================================
   // Set up output pins
   PORTMUX.CTRLC = PORTMUX_TCA05_bm | PORTMUX_TCA04_bm | PORTMUX_TCA03_bm | PORTMUX_TCA02_bm; // Multiplexed outputs
@@ -75,7 +108,7 @@ void windUpMotor() {
   while (period > spinUpEndPeriod) {
 
     for (byte i = 0; i < stepsPerIncrement; i++) {
-      PORTB = motorPortSteps[sequenceStep];
+      motorSteps[sequenceStep]();
       delayMicroseconds(period);
 
       sequenceStep++;
@@ -165,8 +198,9 @@ ISR(TCB0_INT_vect) {
   sequenceStep++;                    // Increment step by 1, next part in the sequence of 6
   sequenceStep %= 6;                 // If step > 5 (equal to 6) then step = 0 and start over
 
-  PORTB = motorPortSteps[sequenceStep]; // Set motor
-  
+  motorSteps[sequenceStep]();
+  bemfSteps[sequenceStep]();
+
   switch (sequenceStep) {
     case 0:
       cFallingBEMF();
@@ -193,7 +227,6 @@ ISR(TCB0_INT_vect) {
       //Serial.println("CH BL AR");
       break;
   }
-  TCB0.INTFLAGS = 1; // Clear interrupt flag (needed in periodic mode)
 }
 
 
