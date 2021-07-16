@@ -229,24 +229,66 @@ void buzz(int periodMicros, int durationMillis) { // Buzz with a period of
 }
 
 
-// Update these to set PWM on high side once reworked
+/* NOTE: The high sides should never be set to HIGH.
+
+  They should always be LOW or overriden by PWM so the state doesn't matter.
+  I use this assumption to potentially simplify this code, by using OUTSET
+  or OUTCLR to adjust the lows but leave the highs to be enabled by the PWM
+  override when needed. This is only used when A needs to be driven low.
+
+  This could prove to be an optimization in the future to put all the highs
+  on one PORT (probably PORTB) and leave the lows on the other (PORTC) so
+  they can be manipulated with simpler code. 
+  
+  This will need a hardware revision.
+*/ 
 void AHBL() {
-  PORTB = B00100100;
+  // Set up PWM pin(s) for high side
+  TCA0.SPLIT.CTRLB = TCA_SPLIT_LCMP2EN_bm;
+
+  // Set pin for low side and leave others cleared
+  PORTB.OUTCLR = PIN0_bm | PIN1_bm;
+  PORTC.OUT = PIN3_bm;
 }
 void AHCL() {
-  PORTB = B00100001;
+  // Set up PWM pin(s) for high side
+  TCA0.SPLIT.CTRLB = TCA_SPLIT_LCMP2EN_bm;
+
+  // Set pin for low side and leave others cleared
+  PORTB.OUTCLR = PIN0_bm | PIN1_bm;
+  PORTC.OUT = PIN5_bm;
 }
 void BHCL() {
-  PORTB = B00001001;
+  // Set up PWM pin(s) for high side
+  TCA0.SPLIT.CTRLB = TCA_SPLIT_LCMP0EN_bm;
+
+  // Set pin for low side and leave others cleared
+  PORTB.OUTCLR = PIN5_bm | PIN1_bm;
+  PORTC.OUT = PIN5_bm;
 }
 void BHAL() {
-  PORTB = B00011000;
+  // Set up PWM pin(s) for high side
+  TCA0.SPLIT.CTRLB = TCA_SPLIT_LCMP0EN_bm;
+
+  // Set pin for low side and leave others cleared
+  PORTB.OUTSET = PIN1_bm;
+  PORTC.OUT = 0;
 }
 void CHAL() {
-  PORTB = B00010010;
+  // Set up PWM pin(s) for high side
+  TCA0.SPLIT.CTRLB = TCA_SPLIT_HCMP1EN_bm;
+
+  // Set pin for low side and leave others cleared
+  PORTB.OUTSET = PIN1_bm;
+  PORTC.OUT = 0;
 }
 void CHBL() {
-  PORTB = B00000110;
+  // Set up PWM pin(s) for high side
+  TCA0.SPLIT.CTRLB = TCA_SPLIT_HCMP1EN_bm;
+
+  // Set pin for low side and leave others cleared
+  PORTB.OUTCLR = PIN0_bm | PIN1_bm;
+  PORTC.OUT = PIN3_bm;
 }
 void allFloat() {
   // Disable PWM timer
