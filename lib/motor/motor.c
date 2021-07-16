@@ -193,6 +193,7 @@ ISR(TCB0_INT_vect) {
       //Serial.println("CH BL AR");
       break;
   }
+  TCB0.INTFLAGS = 1; // Clear interrupt flag (needed in periodic mode)
 }
 
 
