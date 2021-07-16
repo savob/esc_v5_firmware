@@ -194,6 +194,8 @@ void disableMotor() {
 }
 
 ISR(TCB0_INT_vect) {
+  TCB0.INTFLAGS = 1; // Clear interrupt flag
+
   // Set next step
   sequenceStep++;                    // Increment step by 1, next part in the sequence of 6
   sequenceStep %= 6;                 // If step > 5 (equal to 6) then step = 0 and start over
