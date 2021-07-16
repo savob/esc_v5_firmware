@@ -118,27 +118,30 @@ bool enableMotor(byte startDuty) { // Enable motor with specified starting duty,
 
   // Enable PWM timers
   TCA0.SPLIT.CTRLESET = TCA_SPLIT_CMD_RESTART_gc | 0x03; // Reset both timers
-  TCA0.SPLIT.CTRLA = TCA_SPLIT_CLKSEL_DIV16_gc | TCA_SPLIT_ENABLE_bm; // Enable the timer with prescaler of 16
+  TCA0.SPLIT.CTRLA = TCA_SPLIT_CLKSEL_DIV1_gc | TCA_SPLIT_ENABLE_bm; // Enable the timer with prescaler of 16
 
   // Enable analog comparator
   AC1.CTRLA = AC_ENABLE_bm | AC_HYSMODE_25mV_gc; // Enable the AC with a 25mV hysteresis
 
-  /* Timer 1 setup for phase changes
-    Since the zero crossing event happens halfway through the step I will set timer 1 to zero at
-    the start of each phase. Once the zero crossing occurs I will read the current time value for
-    timer 1, double it and set the top to that. Once it triggers at the top it'll step to the next
-    motor setting and reset it's own counter. It will also set it's top to the max to avoid early
-    triggers on the next step before the zero crossing event.
+  /* Timer B0 setup for phase changes
+    
+    Monitors the analog comparator to see when the zero crossing is, records it
+    then switches to periodic mode to then trigger a commutation an equivalent
+    period later.
 
-    Setting is CTC, 8x prescaler
+    Uses TCA0's clock, and initially in Fequency mode to grab zero crossing.
   */
-  TCCR1A = 0x00;
-  TCCR1B = 0x0A;
-  OCR1A = 65535;
-  TIMSK1 = 0x02;
-  TCNT1 = 0;      // Reset counter
+  TCB0.CTRLA = TCB_CLKSEL_CLKTCA_gc | TCB_ENABLE_bm;
+  TCB0.CTRLB = TCB_CNTMODE_FRQ_gc;
+  TCB0.INTCTRL = TCB_CAPT_bm; // Enable timer interrupt
 
+  // Link TCB0 to analog comparator's output
+  TCB0.EVCTRL = TCB_CAPTEI_bm | TCB_EDGE_bm; // Enable event capture input (AC), on falling edge
+  EVSYS.ASYNCCH0 = EVSYS_ASYNCCH0_AC1_OUT_gc; // Use comparator as async channel 0 source
+  EVSYS.ASYNCUSER0 = EVSYS_ASYNCUSER0_ASYNCCH0_gc; // Use async channel 0 as input for TCB0
+  // TODO: set up the proper BEMF test here based on commutation step
 
+  // Set output PWM
   motorStatus = true;     // Needs to be set first, so it can be returned to 0 if the duty is too small to enable it in setPWMmotor().
   setPWMDuty(startDuty);  // Set duty for motor
 
@@ -306,19 +309,25 @@ void allFloat() {
 
 void aRisingBEMF() {
   AC1.MUXCTRLA = 0x08;
+  TCB0.EVCTRL = TCB_CAPTEI_bm; // Enable event capture input (AC), on rising edge
 }
 void aFallingBEMF() {
   AC1.MUXCTRLA = 0x08;
+  TCB0.EVCTRL = TCB_CAPTEI_bm | TCB_EDGE_bm; // Enable event capture input (AC), on falling edge
 }
 void bRisingBEMF() {
   AC1.MUXCTRLA = 0x00;
+  TCB0.EVCTRL = TCB_CAPTEI_bm; // Enable event capture input (AC), on rising edge
 }
 void bFallingBEMF() {
   AC1.MUXCTRLA = 0x00;
+  TCB0.EVCTRL = TCB_CAPTEI_bm | TCB_EDGE_bm; // Enable event capture input (AC), on falling edge
 }
 void cRisingBEMF() {
   AC1.MUXCTRLA = 0x10;
+  TCB0.EVCTRL = TCB_CAPTEI_bm; // Enable event capture input (AC), on rising edge
 }
 void cFallingBEMF() {
   AC1.MUXCTRLA = 0x10;
+  TCB0.EVCTRL = TCB_CAPTEI_bm | TCB_EDGE_bm; // Enable event capture input (AC), on falling edge
 }
