@@ -146,13 +146,7 @@ bool enableMotor(byte startDuty) { // Enable motor with specified starting duty,
 }
 void disableMotor() {
 
-  // Disable PWM timer
-  TCA0.SPLIT.CTRLA = 0;
-  TCA0.SPLIT.CTRLB = 0; // No control over output
-
-  // Set all outputs to low
-  PORTC.OUTCLR = PIN3_bm | PIN4_bm | PIN5_bm;
-  PORTB.OUTCLR = PIN0_bm | PIN1_bm | PIN5_bm;
+  allFloat(); // Set all outputs to float
 
   // Disable Analog Comparator (BEMF)
   AC1.CTRLA = 0; 
@@ -253,6 +247,15 @@ void CHAL() {
 }
 void CHBL() {
   PORTB = B00000110;
+}
+void allFloat() {
+  // Disable PWM timer
+  TCA0.SPLIT.CTRLA = 0;
+  TCA0.SPLIT.CTRLB = 0; // No control over output
+
+  // Set all outputs to low
+  PORTC.OUTCLR = PIN3_bm | PIN4_bm | PIN5_bm;
+  PORTB.OUTCLR = PIN0_bm | PIN1_bm | PIN5_bm;
 }
 
 // Comparator functions
