@@ -1,3 +1,6 @@
+#ifndef ESC_I2C_HEADER
+#define ESC_I2C_HEADER
+
 #include <Wire.h>
 #include "motor.h"
 
@@ -31,3 +34,5 @@ void sendWordWire(word dataValue);
    *  @return Returns a word recieved over word
    */
 word readWordWire();
+
+#endif
