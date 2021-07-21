@@ -3,18 +3,13 @@
 typedef void(*voidFunctionPointer)(); // Used for making commutation arrays
 
 extern volatile byte sequenceStep; // Stores step in spinning sequence
-
-extern volatile bool motorUpslope; // Used for PWM
-extern volatile bool test2;
+extern volatile voidFunctionPointer motorSteps[6]; // Stores the functions to copmmute in the current commutation order
+extern volatile voidFunctionPointer bemfSteps[6]; // Stores the functions to set the BEMF in the current commutation order
 
 // PWM variables
-extern volatile byte maxDuty;           // Upper limit to PWM (MUST be less than 254)
-extern volatile byte duty;
-extern byte endClampThreshold;           // Stores how close you need to be to either extreme before the PWM duty is clamped to that extreme
-
-// AH_BL, AH_ CL, BH_CL, BH_AL, CH_AL, CH_BL
-extern volatile voidFunctionPointer motorSteps[6];
-extern volatile voidFunctionPointer bemfSteps[6];
+extern volatile byte maxDuty;    // Upper limit to PWM (MUST be less than 254)
+extern volatile byte duty;       // Current PWM duty
+extern byte endClampThreshold;   // Stores how close you need to be to either extreme before the PWM duty is clamped to that extreme
 
 // Other variables
 extern volatile byte cyclesPerRotation;
@@ -60,12 +55,12 @@ bool enableMotor(byte startDuty);
 void windUpMotor();
 
 /** @name setupMotor
-   *  @brief Setup motor to operate
+   *  @brief Setup microcontroller to operate the motor
    */
 void setupMotor();
 
 /** @name disableMotor
-   *  @brief Disables motor
+   *  @brief Disables motor immediately
    */
 void disableMotor();
 
