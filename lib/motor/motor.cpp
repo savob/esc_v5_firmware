@@ -193,38 +193,44 @@ void disableMotor() {
 ISR(TCB0_INT_vect) {
   TCB0.INTFLAGS = 1; // Clear interrupt flag
 
-  // Set next step
-  sequenceStep++;                    // Increment step by 1, next part in the sequence of 6
-  sequenceStep %= 6;                 // If step > 5 (equal to 6) then step = 0 and start over
+  // See which mode the timer is in
+  if (TCB0.CTRLB == TCB_CNTMODE_INT_gc) {
+    // If we're in the periodic mode we need to commute the motor
 
-  motorSteps[sequenceStep]();
-  bemfSteps[sequenceStep]();
+    sequenceStep++;                    // Increment step by 1, next part in the sequence of 6
+    sequenceStep %= 6;                 // If step > 5 (equal to 6) then step = 0 and start over
 
-  switch (sequenceStep) {
-    case 0:
-      cFallingBEMF();
-      //Serial.println("AH BL CF");
-      break;
-    case 1:
-      bRisingBEMF();
-      //Serial.println("AH CL BR");
-      break;
-    case 2:
-      aFallingBEMF();
-      //Serial.println("BH CL AF");
-      break;
-    case 3:
-      cRisingBEMF();
-      //Serial.println("BH AL CR");
-      break;
-    case 4:
-      bFallingBEMF();
-      //Serial.println("CH AL BF");
-      break;
-    case 5:
-      aRisingBEMF();
-      //Serial.println("CH BL AR");
-      break;
+    motorSteps[sequenceStep]();
+    bemfSteps[sequenceStep]();
+
+    TCB0.CTRLB = TCB_CNTMODE_FRQ_gc;   // Set timer to catch zero crossing
+
+    // Debug statements
+    switch (sequenceStep) {
+      case 0:
+        //Serial.println("AH BL CF");
+        break;
+      case 1:
+        //Serial.println("AH CL BR");
+        break;
+      case 2:
+        //Serial.println("BH CL AF");
+        break;
+      case 3:
+        //Serial.println("BH AL CR");
+        break;
+      case 4:
+        //Serial.println("CH AL BF");
+        break;
+      case 5:
+        //Serial.println("CH BL AR");
+        break;
+    }
+  }
+  else {
+    // If we're in frequency capture mode (assumed since we're not periodic)
+
+    TCB0.CTRLB = TCB_CNTMODE_INT_gc; // Set timer to commute in the equivalent time since the start of this phase
   }
 }
 
