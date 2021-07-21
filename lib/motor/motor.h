@@ -1,3 +1,6 @@
+#ifndef ESC_MOTOR_HEADER
+#define ESC_MOTOR_HEADER
+
 #include <Arduino.h>
 
 typedef void(*voidFunctionPointer)(); // Used for making commutation arrays
@@ -87,3 +90,5 @@ void bRisingBEMF();   // Set AC to interrupt on B rising edge
 void bFallingBEMF();  // Set AC to interrupt on B falling edge 
 void cRisingBEMF();   // Set AC to interrupt on C rising edge 
 void cFallingBEMF();  // Set AC to interrupt on C falling edge 
+
+#endif
