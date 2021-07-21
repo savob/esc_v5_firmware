@@ -1,17 +1,13 @@
 #include "motor.h"
 
 volatile byte sequenceStep = 0; // Stores step in spinning sequence
-
-volatile bool motorUpslope = true; // Used for PWM
-volatile bool test2 = false;
+volatile voidFunctionPointer motorSteps[6]; // Stores the functions to copmmute in the current commutation order
+volatile voidFunctionPointer bemfSteps[6]; // Stores the functions to set the BEMF in the current commutation order
 
 // PWM variables
 volatile byte maxDuty = 249;           // MUST be less than 254
 volatile byte duty = 100;
 byte endClampThreshold = 15;           // Stores how close you need to be to either extreme before the PWM duty is clamped to that extreme
-
-// AH_BL, AH_ CL, BH_CL, BH_AL, CH_AL, CH_BL
-volatile byte motorPortSteps[] = {B00100100, B00100001, B00001001, B00011000, B00010010, B00000110};
 
 // Other variables
 volatile byte cyclesPerRotation = 2;
@@ -43,6 +39,7 @@ void setupMotor() {
 
   // Setup the commutation steps based on direction
   if (reverse == false) {
+    // AH_BL, AH_ CL, BH_CL, BH_AL, CH_AL, CH_BL
     motorSteps[0] = AHBL;
     motorSteps[1] = AHCL;
     motorSteps[2] = BHCL;
