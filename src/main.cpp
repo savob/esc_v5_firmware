@@ -12,12 +12,5 @@ void setup() {
 
 void loop() {
 
-  if (test2) { // Debugging printer
-    test2 = false;
-    //Serial.println(sequenceStep);
-
-    delay(5);
-  }
-
   disableMotor();
 }
