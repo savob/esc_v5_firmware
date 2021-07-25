@@ -86,8 +86,8 @@ void i2cRecieve(int howMany) {
 }
 
 void i2cRequest() {
-  byte part1, part2;
-
+  // Returns a variable based on the previous command
+  
   switch (currentInstruction) {
     case 0:
       Wire.write(motorStatus);
