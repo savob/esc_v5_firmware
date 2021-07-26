@@ -53,6 +53,9 @@ void setupMotor() {
     bemfSteps[3] = cRisingBEMF;
     bemfSteps[4] = bFallingBEMF;
     bemfSteps[5] = aRisingBEMF;
+#ifdef UART_COMMS_DEBUG
+  Serial.println("Motor is spinning normally.");
+#endif
   }
   else {
     motorSteps[0] = AHBL;
@@ -68,6 +71,9 @@ void setupMotor() {
     bemfSteps[3] = cFallingBEMF;
     bemfSteps[4] = aRisingBEMF;
     bemfSteps[5] = bFallingBEMF;
+#ifdef UART_COMMS_DEBUG
+  Serial.println("Motor spinning set to be reversed");
+#endif
   }
 
   //==============================================
