@@ -55,20 +55,19 @@ void setupMotor() {
     bemfSteps[5] = aRisingBEMF;
   }
   else {
-    // TODO: Reverse these
     motorSteps[0] = AHBL;
-    motorSteps[1] = AHCL;
-    motorSteps[2] = BHCL;
+    motorSteps[1] = CHBL;
+    motorSteps[2] = CHAL;
     motorSteps[3] = BHAL;
-    motorSteps[4] = CHAL;
-    motorSteps[5] = CHBL;
+    motorSteps[4] = BHCL;
+    motorSteps[5] = AHCL;
 
-    bemfSteps[0] = cFallingBEMF;
-    bemfSteps[1] = bRisingBEMF;
-    bemfSteps[2] = aFallingBEMF;
-    bemfSteps[3] = cRisingBEMF;
-    bemfSteps[4] = bFallingBEMF;
-    bemfSteps[5] = aRisingBEMF;
+    bemfSteps[0] = cRisingBEMF;
+    bemfSteps[1] = aFallingBEMF;
+    bemfSteps[2] = bRisingBEMF;
+    bemfSteps[3] = cFallingBEMF;
+    bemfSteps[4] = aRisingBEMF;
+    bemfSteps[5] = bFallingBEMF;
   }
 
   //==============================================
@@ -232,25 +231,49 @@ ISR(TCB0_INT_vect) {
 
 #ifdef UART_COMMS_DEBUG
     // Debug statements
-    switch (sequenceStep) {
-      case 0:
-        Serial.println("AH BL CF");
-        break;
-      case 1:
-        Serial.println("AH CL BR");
-        break;
-      case 2:
-        Serial.println("BH CL AF");
-        break;
-      case 3:
-        Serial.println("BH AL CR");
-        break;
-      case 4:
-        Serial.println("CH AL BF");
-        break;
-      case 5:
-        Serial.println("CH BL AR");
-        break;
+    if (reverse == 0) {
+      switch (sequenceStep) {
+        case 0:
+          Serial.println("AH BL CF");
+          break;
+        case 1:
+          Serial.println("AH CL BR");
+          break;
+        case 2:
+          Serial.println("BH CL AF");
+          break;
+        case 3:
+          Serial.println("BH AL CR");
+          break;
+        case 4:
+          Serial.println("CH AL BF");
+          break;
+        case 5:
+          Serial.println("CH BL AR");
+          break;
+      }
+    }
+    else {
+      switch (sequenceStep) {
+        case 0:
+          Serial.println("AH BL CR");
+          break;
+        case 1:
+          Serial.println("CH BL AF");
+          break;
+        case 2:
+          Serial.println("CH AL BR");
+          break;
+        case 3:
+          Serial.println("BH AL CF");
+          break;
+        case 4:
+          Serial.println("BH CL AR");
+          break;
+        case 5:
+          Serial.println("AH CL BF");
+          break;
+      }
     }
 #endif
   }
