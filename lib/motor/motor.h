@@ -2,6 +2,7 @@
 #define ESC_MOTOR_HEADER
 
 #include <Arduino.h>
+#include "uartcomms.h"
 
 typedef void(*voidFunctionPointer)(); // Used for making commutation arrays
 

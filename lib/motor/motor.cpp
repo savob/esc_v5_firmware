@@ -93,12 +93,20 @@ void setupMotor() {
   CPUINT.LVL1VEC = TCB0_INT_vect_num; // Elevates the communtation interrupt to be prioritized
 
   disableMotor(); // Ensure motor is disabled at start
+
+#ifdef UART_COMMS_DEBUG
+  Serial.println("\n=======\nMotor setup complete\n=======\n");
+#endif
 }
 
 void windUpMotor() {
   // Forces the motor to spin up to a decent speed before running motor normally.
 
   if (motorStatus == true) return; // Not to be run when already spun up
+
+#ifdef UART_COMMS_DEBUG
+  Serial.print("Motor spin-up starting...");
+#endif
 
   int period = spinUpStartPeriod;
 
@@ -113,6 +121,10 @@ void windUpMotor() {
     }
     period -= spinUpPeriodDecrement;
   }
+
+#ifdef UART_COMMS_DEBUG
+  Serial.println("DONE!");
+#endif
 }
 
 
@@ -136,6 +148,11 @@ void setPWMDuty(byte deisredDuty) { // Set the duty of the motor PWM
   TCA0.SPLIT.HCMP1 = duty;
   TCA0.SPLIT.HCMP2 = duty;
   TCA0.SPLIT.CTRLESET = TCA_SPLIT_CMD_RESTART_gc | 0x03; // Reset both timers to syncronize them
+
+#ifdef UART_COMMS_DEBUG
+  Serial.print("ESC duty: ");
+  Serial.println(duty);
+#endif
 }
 
 bool enableMotor(byte startDuty) { // Enable motor with specified starting duty, returns false if duty is too low
@@ -177,6 +194,10 @@ bool enableMotor(byte startDuty) { // Enable motor with specified starting duty,
   motorStatus = true;     // Needs to be set first, so it can be returned to 0 if the duty is too small to enable it in setPWMmotor().
   setPWMDuty(startDuty);  // Set duty for motor
 
+#ifdef UART_COMMS_DEBUG
+  Serial.println("\n! MOTOR ENABLED !\n");
+#endif
+
   return (true);
 }
 void disableMotor() {
@@ -188,6 +209,10 @@ void disableMotor() {
 
   duty = 0;
   motorStatus = false;
+
+#ifdef UART_COMMS_DEBUG
+  Serial.println("\n! MOTOR DISABLED !\n");
+#endif
 }
 
 ISR(TCB0_INT_vect) {
@@ -205,27 +230,29 @@ ISR(TCB0_INT_vect) {
 
     TCB0.CTRLB = TCB_CNTMODE_FRQ_gc;   // Set timer to catch zero crossing
 
+#ifdef UART_COMMS_DEBUG
     // Debug statements
     switch (sequenceStep) {
       case 0:
-        //Serial.println("AH BL CF");
+        Serial.println("AH BL CF");
         break;
       case 1:
-        //Serial.println("AH CL BR");
+        Serial.println("AH CL BR");
         break;
       case 2:
-        //Serial.println("BH CL AF");
+        Serial.println("BH CL AF");
         break;
       case 3:
-        //Serial.println("BH AL CR");
+        Serial.println("BH AL CR");
         break;
       case 4:
-        //Serial.println("CH AL BF");
+        Serial.println("CH AL BF");
         break;
       case 5:
-        //Serial.println("CH BL AR");
+        Serial.println("CH BL AR");
         break;
     }
+#endif
   }
   else {
     // If we're in frequency capture mode (assumed since we're not periodic)

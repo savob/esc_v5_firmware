@@ -4,6 +4,12 @@ byte i2cAddress = 10;      // I2C address. Starts with a default, then adds offs
 byte currentInstruction = 0;
 
 void i2cSetup() {
+
+#ifdef UART_COMMS_DEBUG
+  Serial.print("I2C set up started...");
+  Serial.println(i2cAddress);
+#endif
+
   // Read I2C address settings from the pins PC0, PC1, and PC2
   // Set them as inputs with pullups enabled
   PORTC.DIRCLR = 0x07; 
@@ -24,10 +30,20 @@ void i2cSetup() {
   Wire.begin(i2cAddress);
   Wire.onRequest(i2cRequest);
   Wire.onReceive(i2cRecieve);
+
+#ifdef UART_COMMS_DEBUG
+  Serial.print("COMPLETE.\nI2C Address (HEX): ");
+  Serial.println(i2cAddress, HEX);
+#endif
 }
 
 void i2cRecieve(int howMany) {
   currentInstruction = Wire.read();
+
+#ifdef UART_COMMS_DEBUG
+  Serial.print("Recieved I2C command type: ");
+  Serial.println(currentInstruction);
+#endif
 
   // Check for KILL ORDER
   if (currentInstruction == 0) {
@@ -86,6 +102,12 @@ void i2cRecieve(int howMany) {
 }
 
 void i2cRequest() {
+
+#ifdef UART_COMMS_DEBUG
+  Serial.print("Recieved I2C request type: ");
+  Serial.println(currentInstruction);
+#endif
+
   // Returns a variable based on the previous command
   
   switch (currentInstruction) {

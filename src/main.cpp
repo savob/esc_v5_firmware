@@ -1,13 +1,8 @@
-#define ALLOW_UART_COMMS  // Are we enabling UART?
-#define UART_COMMS_DEBUG  // Do we want debug statements over UART
-
 #include <Arduino.h>
 #include <avr/interrupt.h>
 #include <i2c.h>
 #include <motor.h>
-#ifdef ALLOW_UART_COMMS
 #include <uartcomms.h>
-#endif
 
 void setup() {
 
