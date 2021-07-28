@@ -26,6 +26,7 @@ extern volatile ctrlSchemeEnum controlScheme; // Determines whether the ESC uses
 // RPM related
 extern volatile unsigned int currentRPM;
 extern volatile unsigned int targetRPM;
+extern volatile unsigned long lastRotationMicros;
 
 extern bool reverse;
 extern volatile bool motorStatus; // Stores if the motor is disabled (false) or not

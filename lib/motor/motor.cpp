@@ -13,13 +13,19 @@ byte endClampThreshold = 15;           // Stores how close you need to be to eit
 volatile byte cyclesPerRotation = 2;
 volatile byte cycleCount = 0;
 
-volatile unsigned int currentRPM = 1000;
-volatile unsigned int targetRPM = 0;
+// Control scheme
 volatile ctrlSchemeEnum controlScheme = ctrlSchemeEnum::PWM;
 
+// RPM variables
+volatile unsigned int currentRPM = 1000;
+volatile unsigned int targetRPM = 0;
+volatile unsigned long lastRotationMicros = 0;
+
+// Other motor configuration
 bool reverse = false;
 volatile bool motorStatus = false; // Stores if the motor is disabled (false) or not
 
+// SPin up constants/variables
 const unsigned int spinUpStartPeriod = 5000;
 const unsigned int spinUpEndPeriod = 500;
 const byte stepsPerIncrement = 6;
@@ -234,6 +240,21 @@ ISR(TCB0_INT_vect) {
     bemfSteps[sequenceStep]();
 
     TCB0.CTRLB = TCB_CNTMODE_FRQ_gc;   // Set timer to catch zero crossing
+
+    // Check where we are in completing a rotation to monitor RPM
+    if (sequenceStep == 0) {
+      cycleCount++;
+
+      // Check if we completed a rotation
+      if (cycleCount == cyclesPerRotation) {
+        cycleCount = 0;
+
+        currentRPM = 60000000 / (micros() - lastRotationMicros);
+        lastRotationMicros = micros(); 
+        // Not exactly ideal for accuracy to have this not recorded to something
+        // before doing the math but I think any error is negligible overall
+      }
+    }
 
 #ifdef UART_COMMS_DEBUG
     // Debug statements
