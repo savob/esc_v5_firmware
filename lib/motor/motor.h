@@ -15,13 +15,17 @@ extern volatile byte maxDuty;    // Upper limit to PWM (MUST be less than 254)
 extern volatile byte duty;       // Current PWM duty
 extern byte endClampThreshold;   // Stores how close you need to be to either extreme before the PWM duty is clamped to that extreme
 
-// Other variables
+// Commutation Constants
 extern volatile byte cyclesPerRotation;
 extern volatile byte cycleCount;
 
+// Control Scheme Variables
+enum ctrlSchemeEnum: byte {PWM = 0, RPM = 1}; // Enumerator used for unambiguous control scheme setting
+extern volatile ctrlSchemeEnum controlScheme; // Determines whether the ESC uses PWM (0) or RPM (1) control
+
+// RPM related
 extern volatile unsigned int currentRPM;
 extern volatile unsigned int targetRPM;
-extern volatile byte controlScheme;
 
 extern bool reverse;
 extern volatile bool motorStatus; // Stores if the motor is disabled (false) or not

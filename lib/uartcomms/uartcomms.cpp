@@ -44,11 +44,11 @@ void uartCommands() {
       // Control scheme
       if (Serial.available()) {
         Serial.read(); // Remove dash
-        controlScheme = Serial.parseInt();
+        controlScheme = ctrlSchemeEnum(Serial.parseInt());
       }
 
       // Feedback to user
-      if (controlScheme == 0) Serial.println("PWM control");
+      if (controlScheme == ctrlSchemeEnum::PWM) Serial.println("PWM control");
       else Serial.println("RPM-control");
 
       break;

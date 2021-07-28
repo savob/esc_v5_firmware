@@ -70,7 +70,7 @@ void i2cRecieve(int howMany) {
     case 4:
       // Control scheme
       if (Wire.available()) {
-        controlScheme = Wire.read();
+        controlScheme = ctrlSchemeEnum(Wire.read());
       }
       break;
     case 5:

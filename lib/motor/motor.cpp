@@ -15,7 +15,7 @@ volatile byte cycleCount = 0;
 
 volatile unsigned int currentRPM = 1000;
 volatile unsigned int targetRPM = 0;
-volatile byte controlScheme = 0;
+volatile ctrlSchemeEnum controlScheme = ctrlSchemeEnum::PWM;
 
 bool reverse = false;
 volatile bool motorStatus = false; // Stores if the motor is disabled (false) or not
