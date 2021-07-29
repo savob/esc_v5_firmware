@@ -213,7 +213,8 @@ bool enableMotor(byte startDuty) { // Enable motor with specified starting duty,
 }
 void disableMotor() {
 
-  allFloat(); // Set all outputs to float
+  //allFloat(); // Coast to a stop
+  allLow(); // Brake to a stop
 
   // Disable Analog Comparator (BEMF)
   AC1.CTRLA = 0; 
@@ -330,20 +331,20 @@ void buzz(int periodMicros, int durationMillis) { // Buzz with a period of
   int holdOff = (periodMicros / 2) - holdOn;              // Gets this holdoff period
   unsigned long endOfBuzzing = millis() + durationMillis; // Marks endpoint
 
-  allFloat(); // Ensure we start floating
+  allLow(); // Ensure we start floating
 
   // Buzz for the duration
   while (millis() < endOfBuzzing) {
     PORTB.OUTSET = PIN5_bm;
     PORTC.OUTSET = PIN3_bm;
     delayMicroseconds(holdOn);
-    allFloat();
+    allLow();
     delayMicroseconds(holdOff);
 
     PORTB.OUTSET = PIN5_bm;
     PORTC.OUTSET = PIN5_bm;
     delayMicroseconds(holdOn);
-    allFloat();
+    allLow();
     delayMicroseconds(holdOff);
   }
 
@@ -417,9 +418,22 @@ void allFloat() {
   TCA0.SPLIT.CTRLA = 0;
   TCA0.SPLIT.CTRLB = 0; // No control over output
 
+  // Set all outputs to low (motor coasts)
+  PORTC.OUTCLR = PIN3_bm | PIN4_bm | PIN5_bm;
+  PORTB.OUTCLR = PIN0_bm | PIN1_bm | PIN5_bm;
+}
+void allLow() {
+  // Disable PWM timer
+  TCA0.SPLIT.CTRLA = 0;
+  TCA0.SPLIT.CTRLB = 0; // No control over output
+
   // Set all outputs to low
   PORTC.OUTCLR = PIN3_bm | PIN4_bm | PIN5_bm;
   PORTB.OUTCLR = PIN0_bm | PIN1_bm | PIN5_bm;
+
+  // Set all bridges to pull low (brakes the motor)
+  PORTC.OUTSET = PIN3_bm | PIN5_bm;
+  PORTB.OUTSET = PIN1_bm;
 }
 
 // Comparator functions

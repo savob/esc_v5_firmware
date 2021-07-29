@@ -86,7 +86,16 @@ void BHCL();      // Set B high, C low, A floating
 void BHAL();      // Set B high, A low, C floating
 void CHAL();      // Set C high, A low, B floating
 void CHBL();      // Set C high, B low, A floating
-void allFloat();  // Set all outputs to float
+
+/** @name allFloat
+   *  @brief Sets all motor half-bridges to float, motor coasts to a stop.
+   */
+void allFloat();
+
+/** @name allLow
+   *  @brief Pulls all half-bridges low, braking the motor to a sudden stop.
+   */
+void allLow();    // Set all outputs to float (braking)
 
 // Comparator configuration functions 
 
