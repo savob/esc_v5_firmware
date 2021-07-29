@@ -326,7 +326,8 @@ void buzz(int periodMicros, int durationMillis) { // Buzz with a period of
     for 50 us before holding for the rest of the period.
   */
 
-  int holdOff = (periodMicros / 2) - 50;                  // Gets this holdoff period
+  const unsigned int holdOn = 50;                         // Time the motor is pulled high (microseconds)
+  int holdOff = (periodMicros / 2) - holdOn;              // Gets this holdoff period
   unsigned long endOfBuzzing = millis() + durationMillis; // Marks endpoint
 
   allFloat(); // Ensure we start floating
@@ -335,13 +336,13 @@ void buzz(int periodMicros, int durationMillis) { // Buzz with a period of
   while (millis() < endOfBuzzing) {
     PORTB.OUTSET = PIN5_bm;
     PORTC.OUTSET = PIN3_bm;
-    delayMicroseconds(50);
+    delayMicroseconds(holdOn);
     allFloat();
     delayMicroseconds(holdOff);
 
     PORTB.OUTSET = PIN5_bm;
     PORTC.OUTSET = PIN5_bm;
-    delayMicroseconds(50);
+    delayMicroseconds(holdOn);
     allFloat();
     delayMicroseconds(holdOff);
   }
