@@ -90,11 +90,11 @@ void setupMotor() {
   
   //==============================================
   // Set up PWM
+  TCA0.SPLIT.CTRLA = TCA_SPLIT_CLKSEL_DIV16_gc | TCA_SPLIT_ENABLE_bm; // Enable the split timer with prescaler of 16
   TCA0.SPLIT.LPER = maxDuty; // Set upper duty limit
   TCA0.SPLIT.HPER = maxDuty; 
   TCA0.SPLIT.CTRLESET = TCA_SPLIT_CMD_RESTART_gc | 0x03; // Reset both timers
-  TCA0.SPLIT.CTRLA = TCA_SPLIT_CLKSEL_DIV16_gc | TCA_SPLIT_ENABLE_bm; // Enable the timer with prescaler of 16
-
+  
   //==============================================
   // Analog comparator setting
   AC1.INTCTRL = 0; // Disable analog comparator interrupt
@@ -439,26 +439,26 @@ void allLow() {
 // Comparator functions
 
 void aRisingBEMF() {
-  AC1.MUXCTRLA = 0x08;
+  AC1.MUXCTRLA = AC_MUXPOS_PIN1_gc;
   TCB0.EVCTRL = TCB_CAPTEI_bm; // Enable event capture input (AC), on rising edge
 }
 void aFallingBEMF() {
-  AC1.MUXCTRLA = 0x08;
+  AC1.MUXCTRLA = AC_MUXPOS_PIN1_gc;
   TCB0.EVCTRL = TCB_CAPTEI_bm | TCB_EDGE_bm; // Enable event capture input (AC), on falling edge
 }
 void bRisingBEMF() {
-  AC1.MUXCTRLA = 0x00;
+  AC1.MUXCTRLA = AC_MUXPOS_PIN0_gc;
   TCB0.EVCTRL = TCB_CAPTEI_bm; // Enable event capture input (AC), on rising edge
 }
 void bFallingBEMF() {
-  AC1.MUXCTRLA = 0x00;
+  AC1.MUXCTRLA = AC_MUXPOS_PIN0_gc;
   TCB0.EVCTRL = TCB_CAPTEI_bm | TCB_EDGE_bm; // Enable event capture input (AC), on falling edge
 }
 void cRisingBEMF() {
-  AC1.MUXCTRLA = 0x10;
+  AC1.MUXCTRLA = AC_MUXPOS_PIN3_gc;
   TCB0.EVCTRL = TCB_CAPTEI_bm; // Enable event capture input (AC), on rising edge
 }
 void cFallingBEMF() {
-  AC1.MUXCTRLA = 0x10;
+  AC1.MUXCTRLA = AC_MUXPOS_PIN3_gc;
   TCB0.EVCTRL = TCB_CAPTEI_bm | TCB_EDGE_bm; // Enable event capture input (AC), on falling edge
 }
