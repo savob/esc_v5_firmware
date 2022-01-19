@@ -98,7 +98,7 @@ void setupMotor() {
   //==============================================
   // Analog comparator setting
   AC1.INTCTRL = 0; // Disable analog comparator interrupt
-  AC1.MUXCTRLA = AC_MUXNEG0_bm; // Set negative reference to be Zero pin (PA5)
+  AC1.MUXCTRLA = AC_MUXNEG_PIN0_gc; // Set negative reference to be Zero pin (PA5)
   AC1.CTRLA = AC_ENABLE_bm | AC_HYSMODE_25mV_gc; // Enable the AC with a 25mV hysteresis
 
   CPUINT.LVL1VEC = TCB0_INT_vect_num; // Elevates the communtation interrupt to be prioritized
