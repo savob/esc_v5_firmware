@@ -337,12 +337,19 @@ void buzz(int periodMicros, int durationMillis) { // Buzz with a period of
 
   // Buzz for the duration
   while (millis() < endOfBuzzing) {
+    // Clear the state of all pins so only the phases of interest are driven
+    //PORTA.OUTCLR = PIN5_bm; // Redunant since it will be set soon anyways
+    PORTC.OUTCLR = PIN3_bm | PIN4_bm;
+    PORTB.OUTCLR = PIN0_bm | PIN1_bm | PIN5_bm;
     PORTA.OUTSET = PIN5_bm; // AH
     PORTB.OUTSET = PIN1_bm; // BL
     delayMicroseconds(holdOn);
     allLow();
     delayMicroseconds(holdOff);
 
+    //PORTA.OUTCLR = PIN5_bm;
+    PORTC.OUTCLR = PIN3_bm | PIN4_bm;
+    PORTB.OUTCLR = PIN0_bm | PIN1_bm | PIN5_bm;
     PORTA.OUTSET = PIN5_bm; // AH
     PORTB.OUTSET = PIN0_bm; // CL
     delayMicroseconds(holdOn);
@@ -433,7 +440,6 @@ void allLow() {
   // Set all outputs to low
   PORTA.OUTCLR = PIN5_bm;
   PORTC.OUTCLR = PIN3_bm | PIN4_bm;
-  PORTB.OUTCLR = PIN0_bm | PIN1_bm | PIN5_bm;
 
   // Set all bridges to pull low (brakes the motor)
   PORTB.OUTSET = PIN0_bm | PIN1_bm | PIN5_bm;
