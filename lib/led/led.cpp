@@ -40,3 +40,7 @@ void LEDBlinkBlocking(int period, int count) {
 
   return;
 }
+
+// TODO: Add a non-blocking LED function, likely using TCB1
+// Problem is that currently CLK_PER is same as CPU (20 MHz) so even if prescaled by 2, it will overflow every 6.55ms.
+// Maybe set it overflow ever 5ms and just count as needed or check millis()?
