@@ -38,6 +38,7 @@ void LEDBlinkBlocking(int period, int count) {
     delay(period);
   }
 
+  LEDOn(); // Leaves LED on
   return;
 }
 

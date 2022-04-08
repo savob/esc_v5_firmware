@@ -12,7 +12,8 @@ extern const byte LEDpin; // LED pin number
 // Function declarations
 
 /** @name LEDSetup
-   *  @brief Set up the built in status LED for use
+   *  @brief Set up the built in status LED for use. LED remains on afterwards.
+   *  @note LED will be left on when complete 
    */
 void LEDSetup();
 
@@ -32,9 +33,10 @@ void LEDOff();
 void LEDToggle();
 
 /** @name LEDBlinkBlocking
-   *  @brief Blink the built in LED a set number of times, blocking (pausing) the rest of the code execution.
+   *  @brief Blink the built in LED a set number of times, blocking (pausing) the rest of the code execution. LED remains on afterwards.
    *  @param period Period of each blink in milliseconds
    *  @param count Number of consecutive blinks
+   *  @note LED will be left on when complete
    */
 void LEDBlinkBlocking(int period, int count);
 
