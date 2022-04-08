@@ -145,11 +145,19 @@ void setPWMDuty(byte deisredDuty) { // Set the duty of the motor PWM
   // Checks if input is too low and disables if needed
   if (deisredDuty < endClampThreshold) {
     disableMotor();
+#ifdef UART_COMMS_DEBUG
+    Serial.println("Duty too low, disabling.");
+#endif
     return;
   }
 
   // Check and clamp if near the high extreme
-  if (deisredDuty >= (maxDuty - endClampThreshold)) duty = maxDuty; 
+  if (deisredDuty >= (maxDuty - endClampThreshold)) {\
+    duty = maxDuty;
+#ifdef UART_COMMS_DEBUG
+    Serial.println("Duty close to maximum, clamping it to max.");
+#endif
+  }
   else duty = deisredDuty;
 
   // Assign duty to all outputs
@@ -167,15 +175,25 @@ void setPWMDuty(byte deisredDuty) { // Set the duty of the motor PWM
 #endif
 }
 
-bool enableMotor(byte startDuty) { // Enable motor with specified starting duty, returns false if duty is too low
+bool enableMotor(byte startDuty) { // Enable motor with specified starting duty, returns false if duty is too low or motor is already spinning
 
   // Return false if duty too low, keep motor disabled
   if (startDuty < endClampThreshold) {
     disableMotor();
+#ifdef UART_COMMS_DEBUG
+    Serial.println("Duty too low to enable.");
+#endif
     return (false);
   }
 
-  if (motorStatus == false) windUpMotor(); // Wind up motor if not already spinning
+  if (motorStatus == true) {
+#ifdef UART_COMMS_DEBUG
+    Serial.println("Motor already spinning.");
+#endif
+    return (false);
+  }
+
+  windUpMotor();
 
   // Enable PWM timers
   TCA0.SPLIT.CTRLESET = TCA_SPLIT_CMD_RESTART_gc | 0x03; // Reset both timers
@@ -203,7 +221,7 @@ bool enableMotor(byte startDuty) { // Enable motor with specified starting duty,
   // TODO: set up the proper BEMF test here based on commutation step
 
   // Set output PWM
-  motorStatus = true;     // Needs to be set first, so it can be returned to 0 if the duty is too small to enable it in setPWMmotor().
+  motorStatus = true;
   setPWMDuty(startDuty);  // Set duty for motor
 
 #ifdef UART_COMMS_DEBUG

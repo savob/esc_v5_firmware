@@ -54,7 +54,7 @@ void setPWMDuty(byte deisredDuty);
 /** @name enableMotor
    *  @brief Use this to enable the motor
    *  @param startDuty Motor duty to start with
-   *  @return Returns true if the motor was enabled without issue
+   *  @return Returns true if the motor was enabled without issue. False if duty selected was too low or motor is already spinning.
    */
 bool enableMotor(byte startDuty);
 
