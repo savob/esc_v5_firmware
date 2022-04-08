@@ -27,6 +27,17 @@ void LEDToggle() {
   return;
 }
 
+void LEDSetTo(bool setTo) {
+  if (setTo == true) {
+    LEDOn();
+  }
+  else {
+    LEDOff();
+  }
+
+  return;
+}
+
 void LEDBlinkBlocking(int period, int count) {
   // Since we're toggling the LED we need the half periods
   period = period / 2;

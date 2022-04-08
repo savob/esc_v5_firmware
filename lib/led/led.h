@@ -32,6 +32,12 @@ void LEDOff();
    */
 void LEDToggle();
 
+/** @name LEDSetTo
+   *  @brief Set's the LED to match the state of passed in variable
+   *  @param setTo The desired state for the LED (LED goes ON if TRUE)
+   */
+void LEDSetTo(bool setTo);
+
 /** @name LEDBlinkBlocking
    *  @brief Blink the built in LED a set number of times, blocking (pausing) the rest of the code execution. LED remains on afterwards.
    *  @param period Period of each blink in milliseconds
