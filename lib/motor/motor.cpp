@@ -309,6 +309,7 @@ ISR(TCB0_INT_vect) {
     // If we're in frequency capture mode (assumed since we're not periodic)
 
     TCB0.CTRLB = TCB_CNTMODE_INT_gc; // Set timer to commute in the equivalent time since the start of this phase
+    // Need to set end point by hand because the endpoint used is the time it took to trigger this (stored in TCB0.CCMP)
   }
 }
 
@@ -439,26 +440,26 @@ void allLow() {
 // Comparator functions
 
 void aRisingBEMF() {
-  AC1.MUXCTRLA = AC_MUXPOS_PIN1_gc;
+  AC1.MUXCTRLA = AC_MUXPOS_PIN1_gc | AC_MUXNEG_PIN0_gc;
   TCB0.EVCTRL = TCB_CAPTEI_bm; // Enable event capture input (AC), on rising edge
 }
 void aFallingBEMF() {
-  AC1.MUXCTRLA = AC_MUXPOS_PIN1_gc;
+  AC1.MUXCTRLA = AC_MUXPOS_PIN1_gc | AC_MUXNEG_PIN0_gc;
   TCB0.EVCTRL = TCB_CAPTEI_bm | TCB_EDGE_bm; // Enable event capture input (AC), on falling edge
 }
 void bRisingBEMF() {
-  AC1.MUXCTRLA = AC_MUXPOS_PIN0_gc;
+  AC1.MUXCTRLA = AC_MUXPOS_PIN0_gc | AC_MUXNEG_PIN0_gc;
   TCB0.EVCTRL = TCB_CAPTEI_bm; // Enable event capture input (AC), on rising edge
 }
 void bFallingBEMF() {
-  AC1.MUXCTRLA = AC_MUXPOS_PIN0_gc;
+  AC1.MUXCTRLA = AC_MUXPOS_PIN0_gc | AC_MUXNEG_PIN0_gc;
   TCB0.EVCTRL = TCB_CAPTEI_bm | TCB_EDGE_bm; // Enable event capture input (AC), on falling edge
 }
 void cRisingBEMF() {
-  AC1.MUXCTRLA = AC_MUXPOS_PIN3_gc;
+  AC1.MUXCTRLA = AC_MUXPOS_PIN3_gc | AC_MUXNEG_PIN0_gc;
   TCB0.EVCTRL = TCB_CAPTEI_bm; // Enable event capture input (AC), on rising edge
 }
 void cFallingBEMF() {
-  AC1.MUXCTRLA = AC_MUXPOS_PIN3_gc;
+  AC1.MUXCTRLA = AC_MUXPOS_PIN3_gc | AC_MUXNEG_PIN0_gc;
   TCB0.EVCTRL = TCB_CAPTEI_bm | TCB_EDGE_bm; // Enable event capture input (AC), on falling edge
 }
