@@ -7,7 +7,7 @@ volatile voidFunctionPointer bemfSteps[6]; // Stores the functions to set the BE
 // PWM variables
 volatile byte maxDuty = 249;           // MUST be less than 254
 volatile byte duty = 100;
-byte endClampThreshold = 15;           // Stores how close you need to be to either extreme before the PWM duty is clamped to that extreme
+const byte endClampThreshold = 15;           // Stores how close you need to be to either extreme before the PWM duty is clamped to that extreme
 
 // Other variables
 volatile byte cyclesPerRotation = 2;
@@ -22,7 +22,7 @@ volatile unsigned int targetRPM = 0;
 volatile unsigned long lastRotationMicros = 0;
 
 // Other motor configuration
-bool reverse = false;
+volatile bool reverse = false;
 volatile bool motorStatus = false; // Stores if the motor is disabled (false) or not
 
 // SPin up constants/variables
@@ -84,8 +84,9 @@ void setupMotor() {
 
   //==============================================
   // Set up output pins
-  PORTMUX.CTRLC = PORTMUX_TCA05_bm | PORTMUX_TCA04_bm | PORTMUX_TCA03_bm | PORTMUX_TCA02_bm; // Multiplexed outputs
-  PORTC.DIRSET = PIN3_bm | PIN4_bm | PIN5_bm; // Set pins to be outputs
+  PORTMUX.CTRLC = PORTMUX_TCA04_bm | PORTMUX_TCA03_bm | PORTMUX_TCA02_bm; // Multiplexed PWM outputs
+  PORTA.DIRSET = PIN5_bm;
+  PORTC.DIRSET = PIN3_bm | PIN4_bm; 
   PORTB.DIRSET = PIN0_bm | PIN1_bm | PIN5_bm;
   
   //==============================================
@@ -98,7 +99,7 @@ void setupMotor() {
   //==============================================
   // Analog comparator setting
   AC1.INTCTRL = 0; // Disable analog comparator interrupt
-  AC1.MUXCTRLA = AC_MUXNEG_PIN0_gc; // Set negative reference to be Zero pin (PA5)
+  AC1.MUXCTRLA = AC_MUXNEG_PIN1_gc; // Set negative reference to be Zero pin (PB7)
   AC1.CTRLA = AC_ENABLE_bm | AC_HYSMODE_25mV_gc; // Enable the AC with a 25mV hysteresis
 
   CPUINT.LVL1VEC = TCB0_INT_vect_num; // Elevates the communtation interrupt to be prioritized
@@ -336,14 +337,14 @@ void buzz(int periodMicros, int durationMillis) { // Buzz with a period of
 
   // Buzz for the duration
   while (millis() < endOfBuzzing) {
-    PORTB.OUTSET = PIN5_bm;
-    PORTC.OUTSET = PIN3_bm;
+    PORTA.OUTSET = PIN5_bm; // AH
+    PORTB.OUTSET = PIN1_bm; // BL
     delayMicroseconds(holdOn);
     allLow();
     delayMicroseconds(holdOff);
 
-    PORTB.OUTSET = PIN5_bm;
-    PORTC.OUTSET = PIN5_bm;
+    PORTA.OUTSET = PIN5_bm; // AH
+    PORTB.OUTSET = PIN0_bm; // CL
     delayMicroseconds(holdOn);
     allLow();
     delayMicroseconds(holdOff);
@@ -368,51 +369,51 @@ void buzz(int periodMicros, int durationMillis) { // Buzz with a period of
 */ 
 void AHBL() {
   // Set up PWM pin(s) for high side
-  TCA0.SPLIT.CTRLB = TCA_SPLIT_LCMP2EN_bm;
+  TCA0.SPLIT.CTRLB = TCA_SPLIT_HCMP2EN_bm;
 
   // Set pin for low side and leave others cleared
-  PORTB.OUTCLR = PIN0_bm | PIN1_bm;
-  PORTC.OUT = PIN3_bm;
+  PORTB.OUTCLR = PIN0_bm | PIN1_bm | PIN5_bm;
+  PORTB.OUTSET = PIN1_bm;
 }
 void AHCL() {
   // Set up PWM pin(s) for high side
-  TCA0.SPLIT.CTRLB = TCA_SPLIT_LCMP2EN_bm;
+  TCA0.SPLIT.CTRLB = TCA_SPLIT_HCMP2EN_bm;
 
   // Set pin for low side and leave others cleared
-  PORTB.OUTCLR = PIN0_bm | PIN1_bm;
-  PORTC.OUT = PIN5_bm;
+  PORTB.OUTCLR = PIN0_bm | PIN1_bm | PIN5_bm;
+  PORTB.OUTSET = PIN0_bm;
 }
 void BHCL() {
   // Set up PWM pin(s) for high side
-  TCA0.SPLIT.CTRLB = TCA_SPLIT_LCMP0EN_bm;
+  TCA0.SPLIT.CTRLB = TCA_SPLIT_HCMP0EN_bm;
 
   // Set pin for low side and leave others cleared
-  PORTB.OUTCLR = PIN5_bm | PIN1_bm;
-  PORTC.OUT = PIN5_bm;
+  PORTB.OUTCLR = PIN0_bm | PIN1_bm | PIN5_bm;
+  PORTB.OUTSET = PIN0_bm;
 }
 void BHAL() {
   // Set up PWM pin(s) for high side
-  TCA0.SPLIT.CTRLB = TCA_SPLIT_LCMP0EN_bm;
+  TCA0.SPLIT.CTRLB = TCA_SPLIT_HCMP0EN_bm;
 
   // Set pin for low side and leave others cleared
-  PORTB.OUTSET = PIN1_bm;
-  PORTC.OUT = 0;
+  PORTB.OUTCLR = PIN0_bm | PIN1_bm | PIN5_bm;
+  PORTB.OUTSET = PIN2_bm;
 }
 void CHAL() {
   // Set up PWM pin(s) for high side
   TCA0.SPLIT.CTRLB = TCA_SPLIT_HCMP1EN_bm;
 
   // Set pin for low side and leave others cleared
-  PORTB.OUTSET = PIN1_bm;
-  PORTC.OUT = 0;
+  PORTB.OUTCLR = PIN0_bm | PIN1_bm | PIN5_bm;
+  PORTB.OUTSET = PIN2_bm;
 }
 void CHBL() {
   // Set up PWM pin(s) for high side
   TCA0.SPLIT.CTRLB = TCA_SPLIT_HCMP1EN_bm;
 
   // Set pin for low side and leave others cleared
-  PORTB.OUTCLR = PIN0_bm | PIN1_bm;
-  PORTC.OUT = PIN3_bm;
+  PORTB.OUTCLR = PIN0_bm | PIN1_bm | PIN5_bm;
+  PORTB.OUTSET = PIN1_bm;
 }
 void allFloat() {
   // Disable PWM timer
@@ -420,7 +421,8 @@ void allFloat() {
   TCA0.SPLIT.CTRLB = 0; // No control over output
 
   // Set all outputs to low (motor coasts)
-  PORTC.OUTCLR = PIN3_bm | PIN4_bm | PIN5_bm;
+  PORTA.OUTCLR = PIN5_bm;
+  PORTC.OUTCLR = PIN3_bm | PIN4_bm;
   PORTB.OUTCLR = PIN0_bm | PIN1_bm | PIN5_bm;
 }
 void allLow() {
@@ -429,37 +431,37 @@ void allLow() {
   TCA0.SPLIT.CTRLB = 0; // No control over output
 
   // Set all outputs to low
-  PORTC.OUTCLR = PIN3_bm | PIN4_bm | PIN5_bm;
+  PORTA.OUTCLR = PIN5_bm;
+  PORTC.OUTCLR = PIN3_bm | PIN4_bm;
   PORTB.OUTCLR = PIN0_bm | PIN1_bm | PIN5_bm;
 
   // Set all bridges to pull low (brakes the motor)
-  PORTC.OUTSET = PIN3_bm | PIN5_bm;
-  PORTB.OUTSET = PIN1_bm;
+  PORTB.OUTSET = PIN0_bm | PIN1_bm | PIN5_bm;
 }
 
 // Comparator functions
 
 void aRisingBEMF() {
-  AC1.MUXCTRLA = AC_MUXPOS_PIN1_gc | AC_MUXNEG_PIN0_gc;
+  AC1.MUXCTRLA = AC_MUXPOS_PIN1_gc | AC_MUXNEG_PIN1_gc;
   TCB0.EVCTRL = TCB_CAPTEI_bm; // Enable event capture input (AC), on rising edge
 }
 void aFallingBEMF() {
-  AC1.MUXCTRLA = AC_MUXPOS_PIN1_gc | AC_MUXNEG_PIN0_gc;
+  AC1.MUXCTRLA = AC_MUXPOS_PIN1_gc | AC_MUXNEG_PIN1_gc;
   TCB0.EVCTRL = TCB_CAPTEI_bm | TCB_EDGE_bm; // Enable event capture input (AC), on falling edge
 }
 void bRisingBEMF() {
-  AC1.MUXCTRLA = AC_MUXPOS_PIN0_gc | AC_MUXNEG_PIN0_gc;
+  AC1.MUXCTRLA = AC_MUXPOS_PIN0_gc | AC_MUXNEG_PIN1_gc;
   TCB0.EVCTRL = TCB_CAPTEI_bm; // Enable event capture input (AC), on rising edge
 }
 void bFallingBEMF() {
-  AC1.MUXCTRLA = AC_MUXPOS_PIN0_gc | AC_MUXNEG_PIN0_gc;
+  AC1.MUXCTRLA = AC_MUXPOS_PIN0_gc | AC_MUXNEG_PIN1_gc;
   TCB0.EVCTRL = TCB_CAPTEI_bm | TCB_EDGE_bm; // Enable event capture input (AC), on falling edge
 }
 void cRisingBEMF() {
-  AC1.MUXCTRLA = AC_MUXPOS_PIN3_gc | AC_MUXNEG_PIN0_gc;
+  AC1.MUXCTRLA = AC_MUXPOS_PIN3_gc | AC_MUXNEG_PIN1_gc;
   TCB0.EVCTRL = TCB_CAPTEI_bm; // Enable event capture input (AC), on rising edge
 }
 void cFallingBEMF() {
-  AC1.MUXCTRLA = AC_MUXPOS_PIN3_gc | AC_MUXNEG_PIN0_gc;
+  AC1.MUXCTRLA = AC_MUXPOS_PIN3_gc | AC_MUXNEG_PIN1_gc;
   TCB0.EVCTRL = TCB_CAPTEI_bm | TCB_EDGE_bm; // Enable event capture input (AC), on falling edge
 }

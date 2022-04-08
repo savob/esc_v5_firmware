@@ -13,7 +13,7 @@ extern volatile voidFunctionPointer bemfSteps[6]; // Stores the functions to set
 // PWM variables
 extern volatile byte maxDuty;    // Upper limit to PWM (MUST be less than 254)
 extern volatile byte duty;       // Current PWM duty
-extern byte endClampThreshold;   // Stores how close you need to be to either extreme before the PWM duty is clamped to that extreme
+extern const byte endClampThreshold;   // Stores how close you need to be to either extreme before the PWM duty is clamped to that extreme
 
 // Commutation Constants
 extern volatile byte cyclesPerRotation;
@@ -28,7 +28,7 @@ extern volatile unsigned int currentRPM;
 extern volatile unsigned int targetRPM;
 extern volatile unsigned long lastRotationMicros;
 
-extern bool reverse;
+extern volatile bool reverse;
 extern volatile bool motorStatus; // Stores if the motor is disabled (false) or not
 
 extern const unsigned int spinUpStartPeriod;
