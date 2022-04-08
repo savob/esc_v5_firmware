@@ -27,12 +27,12 @@ void LEDOn();
 void LEDOff();
 
 /** @name LEDToggle
-   *  @brief Toggles (switches) the LED's state
+   *  @brief Toggles (switches) the built in LED's state
    */
 void LEDToggle();
 
 /** @name LEDBlinkBlocking
-   *  @brief 
+   *  @brief Blink the built in LED a set number of times, blocking (pausing) the rest of the code execution.
    *  @param period Period of each blink in milliseconds
    *  @param count Number of consecutive blinks
    */
