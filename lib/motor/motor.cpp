@@ -1,4 +1,5 @@
 #include "motor.h"
+#include "led.h"
 
 volatile byte sequenceStep = 0; // Stores step in spinning sequence
 volatile voidFunctionPointer motorSteps[6]; // Stores the functions to copmmute in the current commutation order
@@ -25,11 +26,11 @@ volatile unsigned long lastRotationMicros = 0;
 volatile bool reverse = false;
 volatile bool motorStatus = false; // Stores if the motor is disabled (false) or not
 
-// SPin up constants/variables
-const unsigned int spinUpStartPeriod = 5000;
-const unsigned int spinUpEndPeriod = 500;
-const byte stepsPerIncrement = 6;
-const unsigned int spinUpPeriodDecrement = 10;
+// Spin up constants/variables
+const unsigned int spinUpStartPeriod = 5000;    // Starting period for each motor step (microseconds)
+const unsigned int spinUpEndPeriod = 500;       // Final step period for motor
+const byte stepsPerIncrement = 6;               // Number of steps before period is decremented
+const unsigned int spinUpPeriodDecrement = 20;  // How much the period is decremented each cycle
 
 // Buzzer period limits
 const unsigned int maxBuzzPeriod = 2000;
@@ -120,12 +121,19 @@ void windUpMotor() {
   Serial.print("Motor spin-up starting...");
 #endif
 
+  // Reset motor to base state
+  allLow();
+  setPWMDuty(maxDuty); // Need maximum PWM for wind up
+
+  LEDOff(); // Used to indicate wind up start
+
   int period = spinUpStartPeriod;
 
   while (period > spinUpEndPeriod) {
 
     for (byte i = 0; i < stepsPerIncrement; i++) {
       motorSteps[sequenceStep]();
+      bemfSteps[sequenceStep](); // Although not used for commutation here, needs to be set for when wind up is completed
       delayMicroseconds(period);
 
       sequenceStep++;
@@ -137,6 +145,8 @@ void windUpMotor() {
 #ifdef UART_COMMS_DEBUG
   Serial.println("DONE!");
 #endif
+
+  LEDOn();
 }
 
 
@@ -193,11 +203,11 @@ bool enableMotor(byte startDuty) { // Enable motor with specified starting duty,
     return (false);
   }
 
-  windUpMotor();
-
   // Enable PWM timers
   TCA0.SPLIT.CTRLESET = TCA_SPLIT_CMD_RESTART_gc | 0x03; // Reset both timers
   TCA0.SPLIT.CTRLA = TCA_SPLIT_CLKSEL_DIV1_gc | TCA_SPLIT_ENABLE_bm; // Enable the timer with prescaler of 16
+
+  windUpMotor(); // Needs to happen once PWM is activated so top side can be driven
 
   // Enable analog comparator
   AC1.CTRLA = AC_ENABLE_bm | AC_HYSMODE_25mV_gc; // Enable the AC with a 25mV hysteresis
@@ -450,9 +460,7 @@ void CHBL() {
   PORTB.OUTSET = PIN1_bm;
 }
 void allFloat() {
-  // Disable PWM timer
-  TCA0.SPLIT.CTRLA = 0;
-  TCA0.SPLIT.CTRLB = 0; // No control over output
+  TCA0.SPLIT.CTRLB = 0; // No PWM control over output
 
   // Set all outputs to low (motor coasts)
   PORTA.OUTCLR = PIN5_bm;
@@ -460,9 +468,7 @@ void allFloat() {
   PORTB.OUTCLR = PIN0_bm | PIN1_bm | PIN5_bm;
 }
 void allLow() {
-  // Disable PWM timer
-  TCA0.SPLIT.CTRLA = 0;
-  TCA0.SPLIT.CTRLB = 0; // No control over output
+  TCA0.SPLIT.CTRLB = 0; // No PWM control over output
 
   // Set all outputs to low
   PORTA.OUTCLR = PIN5_bm;
