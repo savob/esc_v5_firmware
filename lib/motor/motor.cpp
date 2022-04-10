@@ -30,7 +30,7 @@ volatile bool motorStatus = false; // Stores if the motor is disabled (false) or
 const unsigned int spinUpStartPeriod = 5000;    // Starting period for each motor step (microseconds)
 const unsigned int spinUpEndPeriod = 500;       // Final step period for motor
 const byte stepsPerIncrement = 6;               // Number of steps before period is decremented
-const unsigned int spinUpPeriodDecrement = 20;  // How much the period is decremented each cycle
+const unsigned int spinUpPeriodDecrement = 10;  // How much the period is decremented each cycle
 
 // Buzzer period limits
 const unsigned int maxBuzzPeriod = 2000;
@@ -228,7 +228,7 @@ bool enableMotor(byte startDuty) { // Enable motor with specified starting duty,
   TCB0.EVCTRL = TCB_CAPTEI_bm | TCB_EDGE_bm; // Enable event capture input (AC), on falling edge
   EVSYS.ASYNCCH0 = EVSYS_ASYNCCH0_AC1_OUT_gc; // Use comparator as async channel 0 source
   EVSYS.ASYNCUSER0 = EVSYS_ASYNCUSER0_ASYNCCH0_gc; // Use async channel 0 as input for TCB0
-  // TODO: set up the proper BEMF test here based on commutation step
+  bemfSteps[sequenceStep](); // Set proper interrupt
 
   // Set output PWM
   motorStatus = true;
