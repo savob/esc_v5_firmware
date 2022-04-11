@@ -133,7 +133,6 @@ void windUpMotor() {
 
     for (byte i = 0; i < stepsPerIncrement; i++) {
       motorSteps[sequenceStep]();
-      bemfSteps[sequenceStep](); // Although not used for commutation here, needs to be set for when wind up is completed
       delayMicroseconds(period);
 
       sequenceStep++;
@@ -148,7 +147,6 @@ void windUpMotor() {
 
   LEDOn();
 }
-
 
 void setPWMDuty(byte deisredDuty) { // Set the duty of the motor PWM
   
@@ -242,8 +240,8 @@ bool enableMotor(byte startDuty) { // Enable motor with specified starting duty,
 }
 void disableMotor() {
 
-  //allFloat(); // Coast to a stop
-  allLow(); // Brake to a stop
+  allFloat(); // Coast to a stop
+  //allLow(); // Brake to a stop
 
   // Disable Analog Comparator (BEMF)
   AC1.CTRLA = 0; 
@@ -256,99 +254,104 @@ void disableMotor() {
 #endif
 }
 
+// Commutation Period Interrupt
 ISR(TCB0_INT_vect) {
   TCB0.INTFLAGS = 1; // Clear interrupt flag
+  
+  // "Debouncing" if noisy
+  if (TCB0.CCMP < 1000) {
+    TCB0.CNT = TCB0.CCMP;     // Continue the count as if uninterrupted
+    return;
+  }
 
-  // See which mode the timer is in
-  if (TCB0.CTRLB == TCB_CNTMODE_INT_gc) {
-    // If we're in the periodic mode we need to commute the motor
+  TCB1.CCMP = TCB0.CCMP / 2;  // Record the half period
 
-    sequenceStep++;                    // Increment step by 1, next part in the sequence of 6
-    sequenceStep %= 6;                 // If step > 5 (equal to 6) then step = 0 and start over
-
-    motorSteps[sequenceStep]();
-    bemfSteps[sequenceStep]();
-
-    TCB0.CTRLB = TCB_CNTMODE_FRQ_gc;   // Set timer to catch zero crossing
-
-    // Check where we are in completing a rotation to monitor RPM
-    if (sequenceStep == 0) {
-      cycleCount++;
-
-      // Check if we completed a rotation
-      if (cycleCount == cyclesPerRotation) {
-        cycleCount = 0;
-
-        currentRPM = 60000000 / (micros() - lastRotationMicros);
-        lastRotationMicros = micros(); 
-        // Not exactly ideal for accuracy to have this not recorded to something
-        // before doing the math but I think any error is negligible overall
-      }
-    }
+  sequenceStep++;             // Increment step by 1, next part in the sequence of 6
+  sequenceStep %= 6;
+  bemfSteps[sequenceStep]();
 
 #ifdef UART_COMMS_DEBUG
-    /* Debug statements
-     * Three character summaries (one for each phase), ordered A-B-C.
-     *   H - Driven high
-     *   L - Driven low
-     *   R - Looking for rising edge (floating)
-     *   F - Looking for falling edge (floating)
-     * 
-     * Could reduce each phase's state to two bits to condense it under a byte, 
-     * thus waste less time sending, but it will be harder to read.
-     */ 
-    if (reverse == 0) {
-      switch (sequenceStep) {
-        case 0:
-          Serial.println("HLF");
-          break;
-        case 1:
-          Serial.println("HRL");
-          break;
-        case 2:
-          Serial.println("FHL");
-          break;
-        case 3:
-          Serial.println("LHR");
-          break;
-        case 4:
-          Serial.println("LFH");
-          break;
-        case 5:
-          Serial.println("RLH");
-          break;
-      }
+  /* Debug statements
+    Three character summaries (one for each phase), ordered A-B-C.
+      H - Driven high
+      L - Driven low
+      R - Looking for rising edge (floating)
+      F - Looking for falling edge (floating)
+     
+    Could reduce each phase's state to two bits to condense it under a byte, 
+    thus waste less time sending, but it will be harder to read.
+    */ 
+  if (reverse == 0) {
+    switch (sequenceStep) {
+      case 0:
+        Serial.println("HLF");
+        break;
+      case 1:
+        Serial.println("HRL");
+        break;
+      case 2:
+        Serial.println("FHL");
+        break;
+      case 3:
+        Serial.println("LHR");
+        break;
+      case 4:
+        Serial.println("LFH");
+        break;
+      case 5:
+        Serial.println("RLH");
+        break;
     }
-    else {
-      switch (sequenceStep) {
-        case 0:
-          Serial.println("HLR");
-          break;
-        case 1:
-          Serial.println("FLH");
-          break;
-        case 2:
-          Serial.println("LRH");
-          break;
-        case 3:
-          Serial.println("LHF");
-          break;
-        case 4:
-          Serial.println("RHL");
-          break;
-        case 5:
-          Serial.println("HFL");
-          break;
-      }
-    }
-#endif
   }
   else {
-    // If we're in frequency capture mode (assumed since we're not periodic)
-
-    TCB0.CTRLB = TCB_CNTMODE_INT_gc; // Set timer to commute in the equivalent time since the start of this phase
-    // Need to set end point by hand because the endpoint used is the time it took to trigger this (stored in TCB0.CCMP)
+    switch (sequenceStep) {
+      case 0:
+        Serial.println("HLR");
+        break;
+      case 1:
+        Serial.println("FLH");
+        break;
+      case 2:
+        Serial.println("LRH");
+        break;
+      case 3:
+        Serial.println("LHF");
+        break;
+      case 4:
+        Serial.println("RHL");
+        break;
+      case 5:
+        Serial.println("HFL");
+        break;
+    }
   }
+#endif
+}
+
+// Commutation Interrupt
+ISR(TCB1_INT_vect) {
+  TCB1.INTFLAGS = 1; // Clear flag
+
+  PORTA.OUTTGL = PIN3_bm; // Toggle for debugging
+
+  //motorSteps[sequenceStep]();
+
+#ifdef ESC_RPM_COUNT
+  // Check where we are in completing a rotation to monitor RPM
+  if (sequenceStep == 0) {
+    cycleCount++;
+
+    // Check if we completed a rotation
+    if (cycleCount == cyclesPerRotation) {
+      cycleCount = 0;
+
+      currentRPM = 60000000 / (micros() - lastRotationMicros);
+      lastRotationMicros = micros(); 
+      // Not exactly ideal for accuracy to have this not recorded to something
+      // before doing the math but I think any error is negligible overall
+    }
+  }
+#endif
 }
 
 
@@ -483,24 +486,30 @@ void allLow() {
 void aRisingBEMF() {
   AC1.MUXCTRLA = AC_MUXPOS_PIN1_gc | AC_MUXNEG_PIN1_gc;
   TCB0.EVCTRL = TCB_CAPTEI_bm; // Enable event capture input (AC), on rising edge
+  TCB1.EVCTRL = TCB_CAPTEI_bm;
 }
 void aFallingBEMF() {
   AC1.MUXCTRLA = AC_MUXPOS_PIN1_gc | AC_MUXNEG_PIN1_gc;
   TCB0.EVCTRL = TCB_CAPTEI_bm | TCB_EDGE_bm; // Enable event capture input (AC), on falling edge
+  TCB1.EVCTRL = TCB_CAPTEI_bm | TCB_EDGE_bm;
 }
 void bRisingBEMF() {
   AC1.MUXCTRLA = AC_MUXPOS_PIN0_gc | AC_MUXNEG_PIN1_gc;
   TCB0.EVCTRL = TCB_CAPTEI_bm; // Enable event capture input (AC), on rising edge
+  TCB1.EVCTRL = TCB_CAPTEI_bm;
 }
 void bFallingBEMF() {
   AC1.MUXCTRLA = AC_MUXPOS_PIN0_gc | AC_MUXNEG_PIN1_gc;
   TCB0.EVCTRL = TCB_CAPTEI_bm | TCB_EDGE_bm; // Enable event capture input (AC), on falling edge
+  TCB1.EVCTRL = TCB_CAPTEI_bm | TCB_EDGE_bm;
 }
 void cRisingBEMF() {
   AC1.MUXCTRLA = AC_MUXPOS_PIN3_gc | AC_MUXNEG_PIN1_gc;
   TCB0.EVCTRL = TCB_CAPTEI_bm; // Enable event capture input (AC), on rising edge
+  TCB1.EVCTRL = TCB_CAPTEI_bm;
 }
 void cFallingBEMF() {
   AC1.MUXCTRLA = AC_MUXPOS_PIN3_gc | AC_MUXNEG_PIN1_gc;
   TCB0.EVCTRL = TCB_CAPTEI_bm | TCB_EDGE_bm; // Enable event capture input (AC), on falling edge
+  TCB1.EVCTRL = TCB_CAPTEI_bm | TCB_EDGE_bm;
 }
