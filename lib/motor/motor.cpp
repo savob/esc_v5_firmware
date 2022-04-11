@@ -29,8 +29,8 @@ volatile bool motorStatus = false; // Stores if the motor is disabled (false) or
 // Spin up constants/variables
 // Test motor is from an old DVD player if I recall correctly, max RPM expected is about 1600.
 const unsigned int spinUpStartPeriod = 6000;    // Starting period for each motor step (microseconds)
-const unsigned int spinUpEndPeriod = 3300;       // Final step period for motor
-const byte stepsPerIncrement = 6;               // Number of steps before period is decremented
+const unsigned int spinUpEndPeriod = 2000;       // Final step period for motor
+const byte stepsPerIncrement = 12;               // Number of steps before period is decremented
 const unsigned int spinUpPeriodDecrement = 25;  // How much the period is decremented each cycle
 
 // Buzzer period limits
@@ -93,7 +93,7 @@ void setupMotor() {
   
   //==============================================
   // Set up PWM
-  TCA0.SPLIT.CTRLA = TCA_SPLIT_CLKSEL_DIV16_gc | TCA_SPLIT_ENABLE_bm; // Enable the split timer with prescaler of 16
+  TCA0.SPLIT.CTRLA = TCA_SPLIT_CLKSEL_DIV8_gc | TCA_SPLIT_ENABLE_bm; // Enable the split timer with prescaler
   TCA0.SPLIT.LPER = maxDuty; // Set upper duty limit
   TCA0.SPLIT.HPER = maxDuty; 
   TCA0.SPLIT.CTRLESET = TCA_SPLIT_CMD_RESTART_gc | 0x03; // Reset both timers
@@ -111,7 +111,7 @@ void setupMotor() {
 
     They both need to use the same clock! Starting with TCB0:
   */
-  TCB0.CTRLA = TCB_CLKSEL_CLKDIV2_gc | TCB_ENABLE_bm;
+  TCB0.CTRLA = TCB_CLKSEL_CLKTCA_gc | TCB_ENABLE_bm;
   TCB0.CTRLB = TCB_CNTMODE_FRQ_gc;
 
   // Link TCB0 to analog comparator's output
@@ -119,7 +119,7 @@ void setupMotor() {
   EVSYS.ASYNCUSER0 = EVSYS_ASYNCUSER0_ASYNCCH0_gc; // Use async channel 0 (AC) as input for TCB0
 
   // Repeat all that was done for TCB0 for TCB1, except mode
-  TCB1.CTRLA = TCB_CLKSEL_CLKDIV2_gc | TCB_ENABLE_bm; // CLOCK MUST MATCH TCB0!
+  TCB1.CTRLA = TCB0.CTRLA; // CLOCK MUST MATCH TCB0!
   TCB1.CTRLB = TCB_CNTMODE_SINGLE_gc;
   EVSYS.ASYNCUSER11 = EVSYS_ASYNCUSER11_ASYNCCH0_gc; // Use AC as input for TCB1
 
@@ -220,10 +220,6 @@ bool enableMotor(byte startDuty) { // Enable motor with specified starting duty,
 #endif
     return (false);
   }
-
-  // Enable PWM timers
-  TCA0.SPLIT.CTRLESET = TCA_SPLIT_CMD_RESTART_gc | 0x03; // Reset both timers
-  TCA0.SPLIT.CTRLA = TCA_SPLIT_CLKSEL_DIV1_gc | TCA_SPLIT_ENABLE_bm; // Enable the timer with prescaler of 16
 
   windUpMotor(); // Needs to happen once PWM is activated so top side can be driven
 
