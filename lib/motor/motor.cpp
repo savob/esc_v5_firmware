@@ -27,10 +27,11 @@ volatile bool reverse = false;
 volatile bool motorStatus = false; // Stores if the motor is disabled (false) or not
 
 // Spin up constants/variables
-const unsigned int spinUpStartPeriod = 5000;    // Starting period for each motor step (microseconds)
-const unsigned int spinUpEndPeriod = 500;       // Final step period for motor
+// Test motor is from an old DVD player if I recall correctly, max RPM expected is about 1600.
+const unsigned int spinUpStartPeriod = 6000;    // Starting period for each motor step (microseconds)
+const unsigned int spinUpEndPeriod = 3300;       // Final step period for motor
 const byte stepsPerIncrement = 6;               // Number of steps before period is decremented
-const unsigned int spinUpPeriodDecrement = 10;  // How much the period is decremented each cycle
+const unsigned int spinUpPeriodDecrement = 25;  // How much the period is decremented each cycle
 
 // Buzzer period limits
 const unsigned int maxBuzzPeriod = 2000;
@@ -38,7 +39,7 @@ const unsigned int minBuzzPeriod = 200;
 
 void setupMotor() {
   //==============================================
-  // Read in if we're reversing the motor (pin PA4 is shorted)
+  // Read in if we're reversing the motor (pin PA4 is shorted to GND)
   PORTA.DIRCLR = PIN4_bm;
   PORTA.PIN4CTRL = PORT_PULLUPEN_bm; // Set it have a pull up
   delayMicroseconds(100); // Allow outputs to settle before reading
@@ -96,14 +97,33 @@ void setupMotor() {
   TCA0.SPLIT.LPER = maxDuty; // Set upper duty limit
   TCA0.SPLIT.HPER = maxDuty; 
   TCA0.SPLIT.CTRLESET = TCA_SPLIT_CMD_RESTART_gc | 0x03; // Reset both timers
-  
-  //==============================================
-  // Analog comparator setting
-  AC1.INTCTRL = 0; // Disable analog comparator interrupt
-  AC1.MUXCTRLA = AC_MUXNEG_PIN1_gc; // Set negative reference to be Zero pin (PB7)
-  AC1.CTRLA = AC_ENABLE_bm | AC_HYSMODE_25mV_gc; // Enable the AC with a 25mV hysteresis
 
-  CPUINT.LVL1VEC = TCB0_INT_vect_num; // Elevates the communtation interrupt to be prioritized
+  //==============================================
+  /* Timer Bs setup for phase changes
+    
+    Both Timer/Counter B's are used to ensure proper commutation. The first (TCB0) monitors 
+    the analog comparator to see when the zero crossings are, and records the period between 
+    them to TCB1. (Actually the half period since that is the delay needed for commutation.)
+    
+    TCB1 is also activated when there is a zero crossing, however it is in "single shot" mode 
+    so it starts counting up to a set upper limit (set by TCB0). Once reached, it should be at 
+    the end of the phase and be at the perfect spot to commutate the motor.
+
+    They both need to use the same clock! Starting with TCB0:
+  */
+  TCB0.CTRLA = TCB_CLKSEL_CLKDIV2_gc | TCB_ENABLE_bm;
+  TCB0.CTRLB = TCB_CNTMODE_FRQ_gc;
+
+  // Link TCB0 to analog comparator's output
+  EVSYS.ASYNCCH0 = EVSYS_ASYNCCH0_AC1_OUT_gc; // Use comparator as async channel 0 source
+  EVSYS.ASYNCUSER0 = EVSYS_ASYNCUSER0_ASYNCCH0_gc; // Use async channel 0 (AC) as input for TCB0
+
+  // Repeat all that was done for TCB0 for TCB1, except mode
+  TCB1.CTRLA = TCB_CLKSEL_CLKDIV2_gc | TCB_ENABLE_bm; // CLOCK MUST MATCH TCB0!
+  TCB1.CTRLB = TCB_CNTMODE_SINGLE_gc;
+  EVSYS.ASYNCUSER11 = EVSYS_ASYNCUSER11_ASYNCCH0_gc; // Use AC as input for TCB1
+
+  CPUINT.LVL1VEC = TCB0_INT_vect_num; // Elevates the peroid measuring interrupt priority
 
   disableMotor(); // Ensure motor is disabled at start
 
@@ -208,25 +228,16 @@ bool enableMotor(byte startDuty) { // Enable motor with specified starting duty,
   windUpMotor(); // Needs to happen once PWM is activated so top side can be driven
 
   // Enable analog comparator
-  AC1.CTRLA = AC_ENABLE_bm | AC_HYSMODE_25mV_gc; // Enable the AC with a 25mV hysteresis
+  AC1.CTRLA = AC_ENABLE_bm | AC_HYSMODE_50mV_gc | AC_OUTEN_bm; // Enable the AC with hysteresis and AC out on RX
+  PORTB.DIRSET = PIN3_bm; // RX for AC
 
-  /* Timer B0 setup for phase changes
-    
-    Monitors the analog comparator to see when the zero crossing is, records it
-    then switches to periodic mode to then trigger a commutation an equivalent
-    period later.
+  // Manually reset timer/counter Bs and enable their interrupts
+  TCB0.CNT = 0; 
+  TCB1.CCMP = 50000; // Just something so TCB1 doesn't immediately trip on first execution
+  TCB0.INTCTRL = TCB_CAPT_bm;
+  TCB1.INTCTRL = TCB_CAPT_bm;
 
-    Uses TCA0's clock, and initially in Fequency mode to grab zero crossing.
-  */
-  TCB0.CTRLA = TCB_CLKSEL_CLKTCA_gc | TCB_ENABLE_bm;
-  TCB0.CTRLB = TCB_CNTMODE_FRQ_gc;
-  TCB0.INTCTRL = TCB_CAPT_bm; // Enable timer interrupt
-
-  // Link TCB0 to analog comparator's output
-  TCB0.EVCTRL = TCB_CAPTEI_bm | TCB_EDGE_bm; // Enable event capture input (AC), on falling edge
-  EVSYS.ASYNCCH0 = EVSYS_ASYNCCH0_AC1_OUT_gc; // Use comparator as async channel 0 source
-  EVSYS.ASYNCUSER0 = EVSYS_ASYNCUSER0_ASYNCCH0_gc; // Use async channel 0 as input for TCB0
-  bemfSteps[sequenceStep](); // Set proper interrupt
+  bemfSteps[sequenceStep](); // Set proper interrupt conditions
 
   // Set output PWM
   motorStatus = true;
@@ -238,10 +249,11 @@ bool enableMotor(byte startDuty) { // Enable motor with specified starting duty,
 
   return (true);
 }
+
 void disableMotor() {
 
-  allFloat(); // Coast to a stop
-  //allLow(); // Brake to a stop
+  //allFloat(); // Coast to a stop
+  allLow(); // Brake to a stop
 
   // Disable Analog Comparator (BEMF)
   AC1.CTRLA = 0; 
@@ -332,9 +344,7 @@ ISR(TCB0_INT_vect) {
 ISR(TCB1_INT_vect) {
   TCB1.INTFLAGS = 1; // Clear flag
 
-  PORTA.OUTTGL = PIN3_bm; // Toggle for debugging
-
-  //motorSteps[sequenceStep]();
+  motorSteps[sequenceStep]();
 
 #ifdef ESC_RPM_COUNT
   // Check where we are in completing a rotation to monitor RPM
@@ -485,31 +495,31 @@ void allLow() {
 
 void aRisingBEMF() {
   AC1.MUXCTRLA = AC_MUXPOS_PIN1_gc | AC_MUXNEG_PIN1_gc;
-  TCB0.EVCTRL = TCB_CAPTEI_bm; // Enable event capture input (AC), on rising edge
-  TCB1.EVCTRL = TCB_CAPTEI_bm;
+  TCB0.EVCTRL = TCB_CAPTEI_bm | TCB_FILTER_bm; // Enable event capture input (AC), on rising edge
+  TCB1.EVCTRL = TCB_CAPTEI_bm | TCB_FILTER_bm;
 }
 void aFallingBEMF() {
   AC1.MUXCTRLA = AC_MUXPOS_PIN1_gc | AC_MUXNEG_PIN1_gc;
-  TCB0.EVCTRL = TCB_CAPTEI_bm | TCB_EDGE_bm; // Enable event capture input (AC), on falling edge
-  TCB1.EVCTRL = TCB_CAPTEI_bm | TCB_EDGE_bm;
+  TCB0.EVCTRL = TCB_CAPTEI_bm | TCB_EDGE_bm | TCB_FILTER_bm; // Enable event capture input (AC), on falling edge
+  TCB1.EVCTRL = TCB_CAPTEI_bm | TCB_EDGE_bm | TCB_FILTER_bm;
 }
 void bRisingBEMF() {
   AC1.MUXCTRLA = AC_MUXPOS_PIN0_gc | AC_MUXNEG_PIN1_gc;
-  TCB0.EVCTRL = TCB_CAPTEI_bm; // Enable event capture input (AC), on rising edge
-  TCB1.EVCTRL = TCB_CAPTEI_bm;
+  TCB0.EVCTRL = TCB_CAPTEI_bm | TCB_FILTER_bm; // Enable event capture input (AC), on rising edge
+  TCB1.EVCTRL = TCB_CAPTEI_bm | TCB_FILTER_bm;
 }
 void bFallingBEMF() {
   AC1.MUXCTRLA = AC_MUXPOS_PIN0_gc | AC_MUXNEG_PIN1_gc;
-  TCB0.EVCTRL = TCB_CAPTEI_bm | TCB_EDGE_bm; // Enable event capture input (AC), on falling edge
-  TCB1.EVCTRL = TCB_CAPTEI_bm | TCB_EDGE_bm;
+  TCB0.EVCTRL = TCB_CAPTEI_bm | TCB_EDGE_bm | TCB_FILTER_bm; // Enable event capture input (AC), on falling edge
+  TCB1.EVCTRL = TCB_CAPTEI_bm | TCB_EDGE_bm | TCB_FILTER_bm;
 }
 void cRisingBEMF() {
   AC1.MUXCTRLA = AC_MUXPOS_PIN3_gc | AC_MUXNEG_PIN1_gc;
-  TCB0.EVCTRL = TCB_CAPTEI_bm; // Enable event capture input (AC), on rising edge
-  TCB1.EVCTRL = TCB_CAPTEI_bm;
+  TCB0.EVCTRL = TCB_CAPTEI_bm | TCB_FILTER_bm; // Enable event capture input (AC), on rising edge
+  TCB1.EVCTRL = TCB_CAPTEI_bm | TCB_FILTER_bm;
 }
 void cFallingBEMF() {
   AC1.MUXCTRLA = AC_MUXPOS_PIN3_gc | AC_MUXNEG_PIN1_gc;
-  TCB0.EVCTRL = TCB_CAPTEI_bm | TCB_EDGE_bm; // Enable event capture input (AC), on falling edge
-  TCB1.EVCTRL = TCB_CAPTEI_bm | TCB_EDGE_bm;
+  TCB0.EVCTRL = TCB_CAPTEI_bm | TCB_EDGE_bm | TCB_FILTER_bm; // Enable event capture input (AC), on falling edge
+  TCB1.EVCTRL = TCB_CAPTEI_bm | TCB_EDGE_bm | TCB_FILTER_bm;
 }
