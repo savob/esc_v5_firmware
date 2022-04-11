@@ -454,7 +454,7 @@ void BHAL() {
 
   // Set pin for low side and leave others cleared
   PORTB.OUTCLR = PIN0_bm | PIN1_bm | PIN5_bm;
-  PORTB.OUTSET = PIN2_bm;
+  PORTB.OUTSET = PIN5_bm;
 }
 void CHAL() {
   // Set up PWM pin(s) for high side
@@ -462,7 +462,7 @@ void CHAL() {
 
   // Set pin for low side and leave others cleared
   PORTB.OUTCLR = PIN0_bm | PIN1_bm | PIN5_bm;
-  PORTB.OUTSET = PIN2_bm;
+  PORTB.OUTSET = PIN5_bm;
 }
 void CHBL() {
   // Set up PWM pin(s) for high side
