@@ -90,6 +90,13 @@ void setupMotor() {
   PORTA.DIRSET = PIN5_bm;
   PORTC.DIRSET = PIN3_bm | PIN4_bm; 
   PORTB.DIRSET = PIN0_bm | PIN1_bm | PIN5_bm;
+
+  //==============================================
+  // Analog Input Pins
+  PORTA.PIN6CTRL = PORT_ISC_INPUT_DISABLE_gc; // Disable digital input buffer as per suggestions for comparator
+  PORTA.PIN7CTRL = PORT_ISC_INPUT_DISABLE_gc;
+  PORTB.PIN7CTRL = PORT_ISC_INPUT_DISABLE_gc;
+  PORTB.PIN4CTRL = PORT_ISC_INPUT_DISABLE_gc;
   
   //==============================================
   // Set up PWM
