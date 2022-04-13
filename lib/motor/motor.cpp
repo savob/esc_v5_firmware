@@ -37,6 +37,10 @@ const unsigned int spinUpPeriodDecrement = 25;  // How much the period is decrem
 const unsigned int maxBuzzPeriod = 2000;
 const unsigned int minBuzzPeriod = 200;
 
+// Commutation variables used to extend the possible step duration
+volatile unsigned int countAtCommutation; // Variable used to store TCB0 count when commutated (used to predict rollover)
+const unsigned int timerDebounce = 500; 
+
 void setupMotor() {
   //==============================================
   // Read in if we're reversing the motor (pin PA4 is shorted to GND)
@@ -100,7 +104,7 @@ void setupMotor() {
   
   //==============================================
   // Set up PWM
-  TCA0.SPLIT.CTRLA = TCA_SPLIT_CLKSEL_DIV8_gc | TCA_SPLIT_ENABLE_bm; // Enable the split timer with prescaler
+  TCA0.SPLIT.CTRLA = TCA_SPLIT_CLKSEL_DIV1_gc | TCA_SPLIT_ENABLE_bm; // Enable the split timer with NO prescaler
   TCA0.SPLIT.LPER = maxDuty; // Set upper duty limit
   TCA0.SPLIT.HPER = maxDuty; 
   TCA0.SPLIT.CTRLESET = TCA_SPLIT_CMD_RESTART_gc | 0x03; // Reset both timers
@@ -118,7 +122,7 @@ void setupMotor() {
 
     They both need to use the same clock! Starting with TCB0:
   */
-  TCB0.CTRLA = TCB_CLKSEL_CLKTCA_gc | TCB_ENABLE_bm;
+  TCB0.CTRLA = TCB_CLKSEL_CLKDIV2_gc | TCB_ENABLE_bm;
   TCB0.CTRLB = TCB_CNTMODE_FRQ_gc;
 
   // Link TCB0 to analog comparator's output
@@ -128,7 +132,10 @@ void setupMotor() {
   // Repeat all that was done for TCB0 for TCB1, except mode
   TCB1.CTRLA = TCB0.CTRLA; // CLOCK MUST MATCH TCB0!
   TCB1.CTRLB = TCB_CNTMODE_SINGLE_gc;
-  EVSYS.ASYNCUSER11 = EVSYS_ASYNCUSER11_ASYNCCH0_gc; // Use AC as input for TCB1
+
+  // Link TCB1 to AC as well, but on another channel so that it can strobe TCB0 seperately of itself
+  EVSYS.ASYNCCH1 = EVSYS_ASYNCCH1_AC1_OUT_gc;
+  EVSYS.ASYNCUSER11 = EVSYS_ASYNCUSER11_ASYNCCH0_gc;
 
   CPUINT.LVL1VEC = TCB0_INT_vect_num; // Elevates the peroid measuring interrupt priority
 
@@ -255,8 +262,8 @@ bool enableMotor(byte startDuty) { // Enable motor with specified starting duty,
 
 void disableMotor() {
 
-  //allFloat(); // Coast to a stop
-  allLow(); // Brake to a stop
+  allFloat(); // Coast to a stop
+  //allLow(); // Brake to a stop
 
   // Disable Analog Comparator (BEMF)
   AC1.CTRLA = 0; 
@@ -271,15 +278,53 @@ void disableMotor() {
 
 // Commutation Period Interrupt
 ISR(TCB0_INT_vect) {
-  TCB0.INTFLAGS = 1; // Clear interrupt flag
-  
-  // "Debouncing" if noisy
-  if (TCB0.CCMP < 1000) {
-    TCB0.CNT = TCB0.CCMP;     // Continue the count as if uninterrupted
-    return;
+  //TCB0.INTFLAGS = 1; // Clear interrupt flag (not needed since we are reading CCMP, which auto-clears it)
+
+  unsigned int outputCount; // Used to store the potential output
+
+  PORTB.OUTTGL = PIN2_bm;
+
+  /* Trying to determine Rollover and Debouncing
+
+    Since I am measuring the period of an entire phase, I would like to try and extend the 
+    effective range by trying to estimate if a rollover occured in TCB0 while trying to 
+    catch phase length. This is done by having the commutation interrupt record the count 
+    in TCB0 when it goes so when TCB0 runs it can compare it's event time to the one for 
+    when TCB0 went. If 
+
+    TCB0.CCMP > Recorded count - They happened in the same cycle
+    TCB0.CCMP < Recorded count - There was a rollover inbetween them
+
+    Checking for rollover allows me to almost double the period it can measure so it should 
+    be able to safely step up to 10ms (as low as 100Hz).
+
+    Debouncing is needed to prevent the inductive kickback from triggering false readings. 
+    A constant is used to set a "debouncing" period in number of steps (each ~0.1us).
+  */
+
+  if (TCB0.CCMP > countAtCommutation) {
+
+    if (TCB0.CCMP < (countAtCommutation + timerDebounce)) {
+      TCB0.CNT = TCB0.CCMP;     // Continue the count as if uninterrupted
+      return;
+    }
+
+    // No rollover, get half phase
+    outputCount = TCB0.CCMP / 2; 
+  }
+  else {
+    // Likely a rollover occured, so we need to add time for the first phase
+    outputCount = 32768 + (TCB0.CCMP / 2); 
+
+    // Check for debouncing, but need to half the threshold to match the "halved" period measured
+    if (outputCount < ((countAtCommutation/2) + (timerDebounce/2))) {
+      TCB0.CNT = TCB0.CCMP;     // Continue the count as if uninterrupted
+      return;
+    }
   }
 
-  TCB1.CCMP = TCB0.CCMP / 2;  // Record the half period
+  TCB1.CCMP = outputCount;
+  countAtCommutation = 0; // Reset this
 
   sequenceStep++;             // Increment step by 1, next part in the sequence of 6
   sequenceStep %= 6;
@@ -347,7 +392,12 @@ ISR(TCB0_INT_vect) {
 ISR(TCB1_INT_vect) {
   TCB1.INTFLAGS = 1; // Clear flag
 
-  motorSteps[sequenceStep]();
+  // Record TCB0 count at commutation
+  countAtCommutation = TCB0.CNT;
+
+  PORTA.OUTTGL = PIN3_bm; //PWM_IN Pin
+
+  //motorSteps[sequenceStep]();
 
 #ifdef ESC_RPM_COUNT
   // Check where we are in completing a rotation to monitor RPM
