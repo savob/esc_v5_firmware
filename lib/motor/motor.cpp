@@ -28,10 +28,10 @@ volatile bool motorStatus = false; // Stores if the motor is disabled (false) or
 
 // Spin up constants/variables
 // Test motor is from an old DVD player if I recall correctly, max RPM expected is about 1600.
-const unsigned int spinUpStartPeriod = 6000;    // Starting period for each motor step (microseconds)
-const unsigned int spinUpEndPeriod = 2000;       // Final step period for motor
-const byte stepsPerIncrement = 12;               // Number of steps before period is decremented
-const unsigned int spinUpPeriodDecrement = 25;  // How much the period is decremented each cycle
+const unsigned int spinUpStartPeriod = 5000;    // Starting period for each motor step (microseconds)
+const unsigned int spinUpEndPeriod = 500;       // Final step period for motor
+const byte stepsPerIncrement = 6;               // Number of steps before period is decremented
+const unsigned int spinUpPeriodDecrement = 10;  // How much the period is decremented each cycle
 
 // Buzzer period limits
 const unsigned int maxBuzzPeriod = 2000;
@@ -262,8 +262,8 @@ bool enableMotor(byte startDuty) { // Enable motor with specified starting duty,
 
 void disableMotor() {
 
-  allFloat(); // Coast to a stop
-  //allLow(); // Brake to a stop
+  //allFloat(); // Coast to a stop
+  allLow(); // Brake to a stop
 
   // Disable Analog Comparator (BEMF)
   AC1.CTRLA = 0; 
@@ -281,8 +281,6 @@ ISR(TCB0_INT_vect) {
   //TCB0.INTFLAGS = 1; // Clear interrupt flag (not needed since we are reading CCMP, which auto-clears it)
 
   unsigned int outputCount; // Used to store the potential output
-
-  PORTB.OUTTGL = PIN2_bm;
 
   /* Trying to determine Rollover and Debouncing
 
@@ -395,9 +393,7 @@ ISR(TCB1_INT_vect) {
   // Record TCB0 count at commutation
   countAtCommutation = TCB0.CNT;
 
-  PORTA.OUTTGL = PIN3_bm; //PWM_IN Pin
-
-  //motorSteps[sequenceStep]();
+  motorSteps[sequenceStep]();
 
 #ifdef ESC_RPM_COUNT
   // Check where we are in completing a rotation to monitor RPM
