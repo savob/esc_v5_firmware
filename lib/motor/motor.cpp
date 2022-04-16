@@ -133,8 +133,7 @@ void setupMotor() {
   TCB1.CTRLA = TCB0.CTRLA; // CLOCK MUST MATCH TCB0!
   TCB1.CTRLB = TCB_CNTMODE_SINGLE_gc;
 
-  // Link TCB1 to AC as well, but on another channel so that it can strobe TCB0 seperately of itself
-  EVSYS.ASYNCCH1 = EVSYS_ASYNCCH1_AC1_OUT_gc;
+  // Link TCB1 to AC as well
   EVSYS.ASYNCUSER11 = EVSYS_ASYNCUSER11_ASYNCCH0_gc;
 
   CPUINT.LVL1VEC = TCB0_INT_vect_num; // Elevates the peroid measuring interrupt priority
@@ -321,6 +320,9 @@ ISR(TCB0_INT_vect) {
     }
   }
 
+  PORTA.OUTTGL = PIN3_bm;
+  
+  TCB1.CNT = 0; // Reset TCB1 in case it was accidentally triggered well before this
   TCB1.CCMP = outputCount;
   countAtCommutation = 0; // Reset this
 
@@ -390,10 +392,14 @@ ISR(TCB0_INT_vect) {
 ISR(TCB1_INT_vect) {
   TCB1.INTFLAGS = 1; // Clear flag
 
+  PORTB.OUTTGL = PIN2_bm;
+
   // Record TCB0 count at commutation
   countAtCommutation = TCB0.CNT;
 
   motorSteps[sequenceStep]();
+
+  TCB1.CCMP = 65535; // Set to max
 
 #ifdef ESC_RPM_COUNT
   // Check where we are in completing a rotation to monitor RPM
