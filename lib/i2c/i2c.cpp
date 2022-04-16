@@ -89,7 +89,7 @@ void i2cRecieve(int howMany) {
       if (Wire.available()) motorStatus = Wire.read();
 
       // Enable or disable motor
-      if (motorStatus) enableMotor(endClampThreshold + 1); // Set motor to minimum
+      if (motorStatus) enableMotor(minDuty + 1); // Set motor to minimum
       else disableMotor();
       
       break;
@@ -122,7 +122,7 @@ void i2cRequest() {
       break;
     case 3:
       // RPM
-      sendWordWire(currentRPM);
+      sendWordWire(getCurrentRPM());
       break;
     case 4:
       // Control scheme

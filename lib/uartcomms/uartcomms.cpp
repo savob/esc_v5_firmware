@@ -38,7 +38,7 @@ void uartCommands() {
     case 3:
       // Current RPM, read only
       Serial.print("Current RPM: ");
-      Serial.println(currentRPM);
+      Serial.println(getCurrentRPM());
       break;
     case 4:
       // Control scheme
@@ -77,7 +77,7 @@ void uartCommands() {
 
       // Enable or disable motor
       if (motorStatus) {
-        enableMotor(endClampThreshold + 1); // Set motor to minimum
+        enableMotor(minDuty + 1); // Set motor to minimum
 
         Serial.println("\n! MOTOR ENABLED !\n");
         Serial.print("Current PWM duty: ");
