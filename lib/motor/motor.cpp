@@ -28,7 +28,7 @@ volatile bool motorStatus = false; // Stores if the motor is disabled (false) or
 
 // Spin up constants/variables
 // Test motor is from an old DVD player if I recall correctly, max RPM expected is about 1600.
-const unsigned int spinUpStartPeriod = 5000;    // Starting period for each motor step (microseconds)
+const unsigned int spinUpStartPeriod = 3000;    // Starting period for each motor step (microseconds)
 const unsigned int spinUpEndPeriod = 500;       // Final step period for motor
 const byte stepsPerIncrement = 6;               // Number of steps before period is decremented
 const unsigned int spinUpPeriodDecrement = 10;  // How much the period is decremented each cycle
