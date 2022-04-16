@@ -8,19 +8,16 @@ volatile voidFunctionPointer bemfSteps[6]; // Stores the functions to set the BE
 // PWM variables
 volatile byte maxDuty = 249;           // MUST be less than 254
 volatile byte duty = 100;
-const byte endClampThreshold = 15;           // Stores how close you need to be to either extreme before the PWM duty is clamped to that extreme
+const byte endClampThreshold = 15;     // Stores how close you need to be to either extreme before the PWM duty is clamped to that extreme
 
 // Other variables
 volatile byte cyclesPerRotation = 2;
-volatile byte cycleCount = 0;
 
 // Control scheme
 volatile ctrlSchemeEnum controlScheme = ctrlSchemeEnum::PWM;
 
 // RPM variables
-volatile unsigned int currentRPM = 1000;
 volatile unsigned int targetRPM = 0;
-volatile unsigned long lastRotationMicros = 0;
 
 // Other motor configuration
 volatile bool reverse = false;
@@ -398,23 +395,6 @@ ISR(TCB1_INT_vect) {
   motorSteps[sequenceStep]();
 
   TCB1.CCMP = 65535; // Set to max
-
-#ifdef ESC_RPM_COUNT
-  // Check where we are in completing a rotation to monitor RPM
-  if (sequenceStep == 0) {
-    cycleCount++;
-
-    // Check if we completed a rotation
-    if (cycleCount == cyclesPerRotation) {
-      cycleCount = 0;
-
-      currentRPM = 60000000 / (micros() - lastRotationMicros);
-      lastRotationMicros = micros(); 
-      // Not exactly ideal for accuracy to have this not recorded to something
-      // before doing the math but I think any error is negligible overall
-    }
-  }
-#endif
 }
 
 
@@ -463,6 +443,23 @@ void buzz(int periodMicros, int durationMillis) { // Buzz with a period of
   disableMotor(); // Redisable the motor entirely
 }
 
+// RPM estimation function
+unsigned int getCurrentRPM() {
+  float rpm;
+
+  // Get the half step avoiding the default value
+  unsigned int halfStep = TCB1.CCMP;
+  while (halfStep == 65535) halfStep = TCB1.CCMP;
+
+  rpm = halfStep * 12;            // Extrapolate period to complete on six-step cycle
+  rpm = rpm * cyclesPerRotation;  // Extrapolate rotational period
+  rpm = 10000.0 / rpm;            // Determine rotations per millisecond (RPmS) (timers count at 10MHz)
+  rpm = rpm * 60000.0;            // Convert RPmS to RPM
+  // RPmS is used to avoid a large difference in powers when doing division
+
+  unsigned int temp = rpm;
+  return temp;
+}
 
 /* NOTE: The high sides should never be set to HIGH.
 
