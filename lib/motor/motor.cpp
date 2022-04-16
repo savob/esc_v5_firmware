@@ -237,7 +237,6 @@ bool enableMotor(byte startDuty) { // Enable motor with specified starting duty,
 
   // Enable analog comparator
   AC1.CTRLA = AC_ENABLE_bm | AC_HYSMODE_50mV_gc; // Enable the AC with hysteresis
-  PORTB.DIRSET = PIN3_bm; // RX for AC
 
   // Manually reset timer/counter Bs and enable their interrupts
   TCB0.CNT = 0; 
