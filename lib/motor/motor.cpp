@@ -124,6 +124,7 @@ void setupMotor() {
   */
   TCB0.CTRLA = TCB_CLKSEL_CLKDIV2_gc | TCB_ENABLE_bm;
   TCB0.CTRLB = TCB_CNTMODE_FRQ_gc;
+  TCB0.EVCTRL = TCB_CAPTEI_bm | TCB_FILTER_bm; // Enable event capture input, on rising edge
 
   // Link TCB0 to analog comparator's output
   EVSYS.ASYNCCH0 = EVSYS_ASYNCCH0_AC1_OUT_gc; // Use comparator as async channel 0 source
@@ -132,6 +133,7 @@ void setupMotor() {
   // Repeat all that was done for TCB0 for TCB1, except mode
   TCB1.CTRLA = TCB0.CTRLA; // CLOCK MUST MATCH TCB0!
   TCB1.CTRLB = TCB_CNTMODE_SINGLE_gc;
+  TCB1.EVCTRL = TCB_CAPTEI_bm | TCB_FILTER_bm;
 
   // Link TCB1 to AC as well
   EVSYS.ASYNCUSER11 = EVSYS_ASYNCUSER11_ASYNCCH0_gc;
@@ -542,35 +544,28 @@ void allLow() {
   PORTB.OUTSET = PIN0_bm | PIN1_bm | PIN5_bm;
 }
 
-// Comparator functions
+/* Comparator functions
+  Since the timers are always looking for rising edges I need to invert the 
+  comparison results for when we are watching for falling BEMF.
+
+  This approach reduces the code executed per call from three lines to one.
+*/ 
 
 void aRisingBEMF() {
   AC1.MUXCTRLA = AC_MUXPOS_PIN1_gc | AC_MUXNEG_PIN1_gc;
-  TCB0.EVCTRL = TCB_CAPTEI_bm | TCB_FILTER_bm; // Enable event capture input (AC), on rising edge
-  TCB1.EVCTRL = TCB_CAPTEI_bm | TCB_FILTER_bm;
 }
 void aFallingBEMF() {
-  AC1.MUXCTRLA = AC_MUXPOS_PIN1_gc | AC_MUXNEG_PIN1_gc;
-  TCB0.EVCTRL = TCB_CAPTEI_bm | TCB_EDGE_bm | TCB_FILTER_bm; // Enable event capture input (AC), on falling edge
-  TCB1.EVCTRL = TCB_CAPTEI_bm | TCB_EDGE_bm | TCB_FILTER_bm;
+  AC1.MUXCTRLA = AC_MUXPOS_PIN1_gc | AC_MUXNEG_PIN1_gc | AC_INVERT_bm;
 }
 void bRisingBEMF() {
   AC1.MUXCTRLA = AC_MUXPOS_PIN0_gc | AC_MUXNEG_PIN1_gc;
-  TCB0.EVCTRL = TCB_CAPTEI_bm | TCB_FILTER_bm; // Enable event capture input (AC), on rising edge
-  TCB1.EVCTRL = TCB_CAPTEI_bm | TCB_FILTER_bm;
 }
 void bFallingBEMF() {
-  AC1.MUXCTRLA = AC_MUXPOS_PIN0_gc | AC_MUXNEG_PIN1_gc;
-  TCB0.EVCTRL = TCB_CAPTEI_bm | TCB_EDGE_bm | TCB_FILTER_bm; // Enable event capture input (AC), on falling edge
-  TCB1.EVCTRL = TCB_CAPTEI_bm | TCB_EDGE_bm | TCB_FILTER_bm;
+  AC1.MUXCTRLA = AC_MUXPOS_PIN0_gc | AC_MUXNEG_PIN1_gc | AC_INVERT_bm;
 }
 void cRisingBEMF() {
   AC1.MUXCTRLA = AC_MUXPOS_PIN3_gc | AC_MUXNEG_PIN1_gc;
-  TCB0.EVCTRL = TCB_CAPTEI_bm | TCB_FILTER_bm; // Enable event capture input (AC), on rising edge
-  TCB1.EVCTRL = TCB_CAPTEI_bm | TCB_FILTER_bm;
 }
 void cFallingBEMF() {
-  AC1.MUXCTRLA = AC_MUXPOS_PIN3_gc | AC_MUXNEG_PIN1_gc;
-  TCB0.EVCTRL = TCB_CAPTEI_bm | TCB_EDGE_bm | TCB_FILTER_bm; // Enable event capture input (AC), on falling edge
-  TCB1.EVCTRL = TCB_CAPTEI_bm | TCB_EDGE_bm | TCB_FILTER_bm;
+  AC1.MUXCTRLA = AC_MUXPOS_PIN3_gc | AC_MUXNEG_PIN1_gc | AC_INVERT_bm;
 }
