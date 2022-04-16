@@ -182,17 +182,11 @@ void windUpMotor() {
 
 void setPWMDuty(byte deisredDuty) { // Set the duty of the motor PWM
   
-  // Checks if input is too low and disables if needed
+  // Check provided duty
   if (deisredDuty < minDuty) {
-    disableMotor();
-#ifdef UART_COMMS_DEBUG
-    Serial.println("Duty too low, disabling.");
-#endif
-    return;
+    duty = 0; // Checks if input is too low and prepares to disable
   }
-
-  // Check and clamp if over the limit
-  if (deisredDuty > maxDuty) {
+  else if (deisredDuty > maxDuty) {
     duty = maxDuty;
 #ifdef UART_COMMS_DEBUG
     Serial.println("Duty specified over maximum, clamping it to max.");
@@ -200,7 +194,7 @@ void setPWMDuty(byte deisredDuty) { // Set the duty of the motor PWM
   }
   else duty = deisredDuty;
 
-  // Assign duty to all outputs
+  // Assign conditioned duty to all outputs
   TCA0.SPLIT.LCMP0 = duty;
   TCA0.SPLIT.LCMP1 = duty;
   TCA0.SPLIT.LCMP2 = duty;
@@ -208,6 +202,15 @@ void setPWMDuty(byte deisredDuty) { // Set the duty of the motor PWM
   TCA0.SPLIT.HCMP1 = duty;
   TCA0.SPLIT.HCMP2 = duty;
   TCA0.SPLIT.CTRLESET = TCA_SPLIT_CMD_RESTART_gc | 0x03; // Reset both timers to syncronize them
+
+  // Additionally disable motor if duty was too low
+  if (deisredDuty < minDuty) {
+    disableMotor();
+#ifdef UART_COMMS_DEBUG
+    Serial.println("Duty too low, disabling.");
+#endif
+    return;
+  }
 
 #ifdef UART_COMMS_DEBUG
   Serial.print("ESC duty: ");
