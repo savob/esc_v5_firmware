@@ -18,10 +18,6 @@ void setup() {
   LEDBlinkBlocking(500, 4); // Lights before buzing to get code on before motor goes
   buzz(500, 1000);
   LEDBlinkBlocking(500, 2);
-
-  PORTB.DIRSET = PIN2_bm; // TX (Commutation)
-  PORTB.DIRSET = PIN3_bm; // RX (AC1 OUT)
-  PORTA.DIRSET = PIN3_bm; // PWM IN (Period Measurement)
   
   // Turn off LED for actual enabling process
   LEDOff();

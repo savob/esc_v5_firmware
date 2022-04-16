@@ -237,7 +237,7 @@ bool enableMotor(byte startDuty) { // Enable motor with specified starting duty,
   windUpMotor(); // Needs to happen once PWM is activated so top side can be driven
 
   // Enable analog comparator
-  AC1.CTRLA = AC_ENABLE_bm | AC_HYSMODE_50mV_gc | AC_OUTEN_bm; // Enable the AC with hysteresis and AC out on RX
+  AC1.CTRLA = AC_ENABLE_bm | AC_HYSMODE_50mV_gc; // Enable the AC with hysteresis
   PORTB.DIRSET = PIN3_bm; // RX for AC
 
   // Manually reset timer/counter Bs and enable their interrupts
@@ -319,8 +319,6 @@ ISR(TCB0_INT_vect) {
       return;
     }
   }
-
-  PORTA.OUTTGL = PIN3_bm;
   
   TCB1.CNT = 0; // Reset TCB1 in case it was accidentally triggered well before this
   TCB1.CCMP = outputCount;
@@ -391,8 +389,6 @@ ISR(TCB0_INT_vect) {
 // Commutation Interrupt
 ISR(TCB1_INT_vect) {
   TCB1.INTFLAGS = 1; // Clear flag
-
-  PORTB.OUTTGL = PIN2_bm;
 
   // Record TCB0 count at commutation
   countAtCommutation = TCB0.CNT;
