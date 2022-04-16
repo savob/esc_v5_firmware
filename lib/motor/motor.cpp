@@ -262,11 +262,16 @@ bool enableMotor(byte startDuty) { // Enable motor with specified starting duty,
 
 void disableMotor() {
 
-  //allFloat(); // Coast to a stop
-  allLow(); // Brake to a stop
-
   // Disable Analog Comparator (BEMF)
   AC1.CTRLA = 0; 
+
+  // Disable motor timer interrupts
+  TCB0.INTCTRL = 0;
+  TCB1.INTCTRL = 0;
+
+  // Lock phases after disabling commutation interrupts
+  //allFloat(); // Coast to a stop
+  allLow(); // Brake to a stop
 
   duty = 0;
   motorStatus = false;
