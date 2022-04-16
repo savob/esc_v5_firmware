@@ -6,9 +6,9 @@ volatile voidFunctionPointer motorSteps[6]; // Stores the functions to copmmute 
 volatile voidFunctionPointer bemfSteps[6]; // Stores the functions to set the BEMF in the current commutation order
 
 // PWM variables
-volatile byte maxDuty = 249;           // MUST be less than 254
+volatile byte maxDuty = 249; // MUST be less than 256
 volatile byte duty = 100;
-const byte endClampThreshold = 15;     // Stores how close you need to be to either extreme before the PWM duty is clamped to that extreme
+const byte minDuty = 25;     // Stores minimum allowed duty
 
 // Other variables
 volatile byte cyclesPerRotation = 2;
@@ -183,7 +183,7 @@ void windUpMotor() {
 void setPWMDuty(byte deisredDuty) { // Set the duty of the motor PWM
   
   // Checks if input is too low and disables if needed
-  if (deisredDuty < endClampThreshold) {
+  if (deisredDuty < minDuty) {
     disableMotor();
 #ifdef UART_COMMS_DEBUG
     Serial.println("Duty too low, disabling.");
@@ -191,11 +191,11 @@ void setPWMDuty(byte deisredDuty) { // Set the duty of the motor PWM
     return;
   }
 
-  // Check and clamp if near the high extreme
-  if (deisredDuty >= (maxDuty - endClampThreshold)) {\
+  // Check and clamp if over the limit
+  if (deisredDuty > maxDuty) {
     duty = maxDuty;
 #ifdef UART_COMMS_DEBUG
-    Serial.println("Duty close to maximum, clamping it to max.");
+    Serial.println("Duty specified over maximum, clamping it to max.");
 #endif
   }
   else duty = deisredDuty;
@@ -218,7 +218,7 @@ void setPWMDuty(byte deisredDuty) { // Set the duty of the motor PWM
 bool enableMotor(byte startDuty) { // Enable motor with specified starting duty, returns false if duty is too low or motor is already spinning
 
   // Return false if duty too low, keep motor disabled
-  if (startDuty < endClampThreshold) {
+  if (startDuty < minDuty) {
     disableMotor();
 #ifdef UART_COMMS_DEBUG
     Serial.println("Duty too low to enable.");
