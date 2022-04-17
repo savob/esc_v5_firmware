@@ -22,14 +22,19 @@ void setup() {
   
   // Turn off LED for actual enabling process
   LEDOff();
-  enableMotor(maxDuty);
+  //enableMotor(100);
+  //delay(10000);
+  //disableMotor();
+
+  LEDOn();
 }
 
 void loop() {
-  LEDOn(); // LED is usually on when operational
 
 #ifdef ALLOW_UART_COMMS
   delay(10); // Let messages arrive
   if (Serial.available()) uartCommands(); // Check for commands over UART
 #endif
+
+  nonBlockingLEDBlink();
 }

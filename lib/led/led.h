@@ -8,6 +8,10 @@
 
 extern const byte LEDpin; // LED pin number
 
+extern unsigned long nonBlockToggleTime;  // Records next toggle time for LED when not blocking
+extern unsigned int nonBlockTogglePeriod; // Records current toggle period for LED when not blocking
+extern unsigned int nonBlockTogglesLeft;  // Keeps track of remaining toggles for non-blocking blink
+
 ////////////////////////////////////////////////////////////
 // Function declarations
 
@@ -46,5 +50,18 @@ void LEDSetTo(bool setTo);
    */
 void LEDBlinkBlocking(int period, int count);
 
+/** @name nonBlockingLEDBlink
+   *  @brief Blink the built in LED a set number of times, without blocking other code. LED remains on afterwards. Repeatedly called to update LED.
+   *  @note Should be used at the end of the main control loop
+   */
+void nonBlockingLEDBlink();
+
+/** @name setNonBlockingBlink
+   *  @brief Set the built in LED to blink  a set number of times, without blocking (pausing) the rest of the code execution.
+   *  @param period Period of each blink in milliseconds
+   *  @param count Number of consecutive blinks
+   *  @note LED will be left on when complete
+   */
+void setNonBlockingBlink (unsigned int period, unsigned int count);
 
 #endif
