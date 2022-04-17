@@ -3,7 +3,7 @@
 
 #define ALLOW_UART_COMMS  // Are we enabling UART?
 #ifdef ALLOW_UART_COMMS
-//#define UART_COMMS_DEBUG  // Do we want debug statements over UART? (Cannot be defined with UART being enabled)
+#define UART_COMMS_DEBUG  // Do we want debug statements over UART? (Cannot be defined with UART being enabled)
 #endif
 
 #include <Arduino.h>

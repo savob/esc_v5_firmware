@@ -10,7 +10,7 @@ void uartSetup() {
 }
 
 void uartCommands() {
-  byte currentUARTInstruction = Serial.read() - 48;
+  byte currentUARTInstruction = Serial.parseInt();
 
   // Check for KILL ORDER
   if (currentUARTInstruction == 0) {
@@ -103,12 +103,12 @@ void uartCommands() {
 
     delay(100);
 
-    int blinkPeriod = Serial.parseInt();
-    int blinkCount = Serial.parseInt();
+    unsigned int blinkPeriod = Serial.parseInt();
+    unsigned int blinkCount = Serial.parseInt();
     
     Serial.printf("Blinking LED for %d ms, %d times.\n", blinkPeriod, blinkCount);
 
-    setNonBlockingBlink(blinkPeriod, blinkCount);
+    LEDBlinkBlocking(blinkPeriod, blinkCount);
       
   }
   else if (currentUARTInstruction == 9) {
@@ -117,8 +117,8 @@ void uartCommands() {
     
     delay(100);
 
-    int buzzPeriod = Serial.parseInt();
-    int buzzDuration = Serial.parseInt();
+    unsigned int buzzPeriod = Serial.parseInt();
+    unsigned int buzzDuration = Serial.parseInt();
     
     Serial.printf("Buzzing with period of %d us for %d ms.\n", buzzPeriod, buzzDuration);
 
