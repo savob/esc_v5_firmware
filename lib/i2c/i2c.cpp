@@ -54,45 +54,42 @@ void i2cRecieve(int howMany) {
     }
   }
 
-  switch (currentInstruction) {
-    case 1:
-      // Reverse, read only
-      break;
-    case 2:
-      // Duty, set if another byte present
-      if (Wire.available()) {
-        enableMotor(Wire.read());
-      }
-      break;
-    case 3:
-      // Current RPM, read only
-      break;
-    case 4:
-      // Control scheme
-      if (Wire.available()) {
-        controlScheme = ctrlSchemeEnum(Wire.read());
-      }
-      break;
-    case 5:
-      // Target RPM
-      if (Wire.available()) {
-        targetRPM = readWordWire(); // Read
-      }
-      break;
-    case 6:
-      // Number of cycles in a rotation
-      if (Wire.available()) {
-        cyclesPerRotation = Wire.read();
-      }
-      break;
-    case 7:
-      if (Wire.available()) motorStatus = Wire.read();
+  if (currentInstruction == 1) {
+    // Reverse, read only
+  }
+  else if (currentInstruction == 2) {
+    // Duty, set if another byte present
+    if (Wire.available()) {
+      enableMotor(Wire.read());
+    }
+  }
+  else if (currentInstruction == 3) {
+    // Current RPM, read only
+  }
+  else if (currentInstruction == 4) {
+    // Control scheme
+    if (Wire.available()) {
+      controlScheme = ctrlSchemeEnum(Wire.read());
+    }
+  }
+  else if (currentInstruction == 5) {
+    // Target RPM
+    if (Wire.available()) {
+      targetRPM = readWordWire(); // Read
+    }
+  }
+  else if (currentInstruction == 6) {
+    // Number of cycles in a rotation
+    if (Wire.available()) {
+      cyclesPerRotation = Wire.read();
+    }
+  }
+  else if (currentInstruction == 7) {
+    if (Wire.available()) motorStatus = Wire.read();
 
-      // Enable or disable motor
-      if (motorStatus) enableMotor(minDuty + 1); // Set motor to minimum
-      else disableMotor();
-      
-      break;
+    // Enable or disable motor
+    if (motorStatus) enableMotor(minDuty + 1); // Set motor to minimum
+    else disableMotor();
   }
 
   // Clear buffer of any other fluff
@@ -110,36 +107,34 @@ void i2cRequest() {
 
   // Returns a variable based on the previous command
   
-  switch (currentInstruction) {
-    case 0:
-      Wire.write(motorStatus);
-      break;
-    case 1:
-      Wire.write(reverse);
-      break;
-    case 2:
-      Wire.write(duty);
-      break;
-    case 3:
-      // RPM
-      sendWordWire(getCurrentRPM());
-      break;
-    case 4:
-      // Control scheme
-      Wire.write(controlScheme);
-      break;
-    case 5:
-      // Target RPM
-      sendWordWire(targetRPM);
-      break;
-    case 6:
-      // Cycles in a rotation
-      Wire.write(cyclesPerRotation);
-      break;
-    case 7:
-      // Cycles in a rotation
-      Wire.write(motorStatus);
-      break;
+  if (currentInstruction == 0) {
+    Wire.write(motorStatus);
+  }
+  else if (currentInstruction == 1) {
+    Wire.write(reverse);
+  }
+  else if (currentInstruction == 2) {
+    Wire.write(duty);
+  }
+  else if (currentInstruction == 3) {
+    // RPM
+    sendWordWire(getCurrentRPM());
+  }
+  else if (currentInstruction == 4) {
+    // Control scheme
+    Wire.write(controlScheme);
+  }
+  else if (currentInstruction == 5) {
+    // Target RPM
+    sendWordWire(targetRPM);
+  }
+  else if (currentInstruction == 6) {
+    // Cycles in a rotation
+    Wire.write(cyclesPerRotation);
+  }
+  else if (currentInstruction == 7) {
+    // Cycles in a rotation
+    Wire.write(motorStatus);
   }
 
 }
