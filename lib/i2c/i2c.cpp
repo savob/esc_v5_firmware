@@ -1,7 +1,7 @@
 #include "i2c.h"
 
 byte i2cAddress = 10;      // I2C address. Starts with a default, then adds offset according to soldering pads
-byte currentInstruction = 0;
+byte currentI2CInstruction = 0;
 
 void i2cSetup() {
 
@@ -38,15 +38,15 @@ void i2cSetup() {
 }
 
 void i2cRecieve(int howMany) {
-  currentInstruction = Wire.read();
+  currentI2CInstruction = Wire.read();
 
 #ifdef UART_COMMS_DEBUG
   Serial.print("Recieved I2C command type: ");
-  Serial.println(currentInstruction);
+  Serial.println(currentI2CInstruction);
 #endif
 
   // Check for KILL ORDER
-  if (currentInstruction == 0) {
+  if (currentI2CInstruction == 0) {
     disableMotor();
 
     while (true) {
@@ -54,37 +54,37 @@ void i2cRecieve(int howMany) {
     }
   }
 
-  if (currentInstruction == 1) {
+  if (currentI2CInstruction == 1) {
     // Reverse, read only
   }
-  else if (currentInstruction == 2) {
+  else if (currentI2CInstruction == 2) {
     // Duty, set if another byte present
     if (Wire.available()) {
       enableMotor(Wire.read());
     }
   }
-  else if (currentInstruction == 3) {
+  else if (currentI2CInstruction == 3) {
     // Current RPM, read only
   }
-  else if (currentInstruction == 4) {
+  else if (currentI2CInstruction == 4) {
     // Control scheme
     if (Wire.available()) {
       controlScheme = ctrlSchemeEnum(Wire.read());
     }
   }
-  else if (currentInstruction == 5) {
+  else if (currentI2CInstruction == 5) {
     // Target RPM
     if (Wire.available()) {
       targetRPM = readWordWire(); // Read
     }
   }
-  else if (currentInstruction == 6) {
+  else if (currentI2CInstruction == 6) {
     // Number of cycles in a rotation
     if (Wire.available()) {
       cyclesPerRotation = Wire.read();
     }
   }
-  else if (currentInstruction == 7) {
+  else if (currentI2CInstruction == 7) {
     if (Wire.available()) motorStatus = Wire.read();
 
     // Enable or disable motor
@@ -102,42 +102,42 @@ void i2cRequest() {
 
 #ifdef UART_COMMS_DEBUG
   Serial.print("Recieved I2C request type: ");
-  Serial.println(currentInstruction);
+  Serial.println(currentI2CInstruction);
 #endif
 
   // Returns a variable based on the previous command
   
-  if (currentInstruction == 0) {
+  if (currentI2CInstruction == 0) {
     Wire.write(motorStatus);
   }
-  else if (currentInstruction == 1) {
+  else if (currentI2CInstruction == 1) {
     Wire.write(reverse);
   }
-  else if (currentInstruction == 2) {
+  else if (currentI2CInstruction == 2) {
     Wire.write(duty);
   }
-  else if (currentInstruction == 3) {
+  else if (currentI2CInstruction == 3) {
     // RPM
     sendWordWire(getCurrentRPM());
   }
-  else if (currentInstruction == 4) {
+  else if (currentI2CInstruction == 4) {
     // Control scheme
     Wire.write(controlScheme);
   }
-  else if (currentInstruction == 5) {
+  else if (currentI2CInstruction == 5) {
     // Target RPM
     sendWordWire(targetRPM);
   }
-  else if (currentInstruction == 6) {
+  else if (currentI2CInstruction == 6) {
     // Cycles in a rotation
     Wire.write(cyclesPerRotation);
   }
-  else if (currentInstruction == 7) {
+  else if (currentI2CInstruction == 7) {
     // Cycles in a rotation
     Wire.write(motorStatus);
   }
-
 }
+
 void sendWordWire(word dataValue) {
   // Writes a word to wire interface
   // High byte first
@@ -146,6 +146,7 @@ void sendWordWire(word dataValue) {
   Wire.write(part2);
   Wire.write(part1);
 }
+
 word readWordWire() {
   byte part1 = Wire.read();
   byte part2 = Wire.read();

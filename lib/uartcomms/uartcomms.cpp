@@ -58,7 +58,7 @@ void uartCommands() {
 
     // Feedback to user
     if (controlScheme == ctrlSchemeEnum::PWM) Serial.println("PWM control");
-    else Serial.println("RPM-control");
+    else Serial.println("RPM control");
 
   }
   else if (currentUARTInstruction == 5) {
