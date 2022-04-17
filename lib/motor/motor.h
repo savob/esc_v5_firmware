@@ -108,4 +108,16 @@ void cFallingBEMF();  // Set AC to interrupt on C falling edge
    */
 unsigned int getCurrentRPM(); // Returns current RPM
 
+/** @name setToBuzz
+   *  @brief Use this to set the system to buzz outside an interrupt. Motor needs to be disabled to work.
+   *  @param  periodMicros Period of buzz tone in microseconds
+   *  @param  durationMillis Duration of buzz overall in milliseconds
+   */
+void setToBuzz(unsigned int period, unsigned int duration);
+
+/** @name runInterruptBuzz
+   *  @brief Runs a buzz when called if an interrupt called for one
+   */
+void runInterruptBuzz();
+
 #endif

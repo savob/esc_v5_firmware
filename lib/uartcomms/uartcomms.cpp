@@ -122,7 +122,7 @@ void uartCommands() {
     
     Serial.printf("Buzzing with period of %d us for %d ms.\n", buzzPeriod, buzzDuration);
 
-    buzz(buzzPeriod, buzzDuration);
+    setToBuzz(buzzPeriod, buzzDuration);
   }
 
   // Clear buffer of any other fluff

@@ -37,4 +37,5 @@ void loop() {
 #endif
 
   nonBlockingLEDBlink();
+  runInterruptBuzz();
 }

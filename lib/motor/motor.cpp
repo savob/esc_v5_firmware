@@ -34,6 +34,10 @@ const unsigned int spinUpPeriodDecrement = 10;  // How much the period is decrem
 const unsigned int maxBuzzPeriod = 2000;
 const unsigned int minBuzzPeriod = 200;
 
+// Variables for buzzes summoned in interrupts (not globally scoped)
+volatile unsigned int interruptBuzzPeriod = 0;
+volatile unsigned int interruptBuzzDuration = 0;
+
 // Commutation variables used to extend the possible step duration
 volatile unsigned int countAtCommutation; // Variable used to store TCB0 count when commutated (used to predict rollover)
 const unsigned int timerDebounce = 500; 
@@ -572,4 +576,22 @@ void cRisingBEMF() {
 }
 void cFallingBEMF() {
   AC1.MUXCTRLA = AC_MUXPOS_PIN3_gc | AC_MUXNEG_PIN1_gc | AC_INVERT_bm;
+}
+
+// Function to prepare a buzz outside an interrupt
+void setToBuzz(unsigned int period, unsigned int duration) {
+  interruptBuzzDuration = duration;
+  interruptBuzzPeriod = period;
+}
+
+// Run a buzz specified from an interrupt
+void runInterruptBuzz() {
+  // Only bother buzzing when a request was recently made
+  if (interruptBuzzPeriod > 0) {
+    buzz(interruptBuzzPeriod, interruptBuzzDuration);
+
+    // Clear until next interrupt sets them
+    interruptBuzzDuration = 0;
+    interruptBuzzPeriod = 0;
+  }
 }
