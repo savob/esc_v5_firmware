@@ -108,7 +108,7 @@ void uartCommands() {
     
     Serial.printf("Blinking LED for %d ms, %d times.\n", blinkPeriod, blinkCount);
 
-    LEDBlinkBlocking(blinkPeriod, blinkCount);
+    setNonBlockingBlink(blinkPeriod, blinkCount);
       
   }
   else if (currentUARTInstruction == 9) {
