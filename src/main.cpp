@@ -7,12 +7,13 @@
 
 void setup() {
   LEDSetup(); // Set up LED first to indicate it is powered
-  setupMotor();
-  i2cSetup(); 
 
 #ifdef ALLOW_UART_COMMS
-  uartSetup(); // Needs to go first to potential printing of debugging statements
+  uartSetup(); // Needs to go first to allow potential printing of debugging statements
 #endif
+
+  setupMotor();
+  i2cSetup(); 
   
   // Alert user set up is complete
   LEDBlinkBlocking(500, 4); // Lights before buzing to get code on before motor goes
@@ -28,6 +29,7 @@ void loop() {
   LEDOn(); // LED is usually on when operational
 
 #ifdef ALLOW_UART_COMMS
+  delay(10); // Let messages arrive
   if (Serial.available()) uartCommands(); // Check for commands over UART
 #endif
 }
