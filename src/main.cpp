@@ -56,7 +56,7 @@ void loop() {
 
 void emergencyStop() {
   disableMotor();
-  cli();
+  cli(); // Disable global interrupts to prevent anything trying to raise motor
 
 #ifdef UART_COMMS_DEBUG
   Serial.println("EMERGENCY STOPPED");
