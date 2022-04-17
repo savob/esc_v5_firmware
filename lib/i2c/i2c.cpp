@@ -91,6 +91,38 @@ void i2cRecieve(int howMany) {
     if (motorStatus) enableMotor(minDuty + 1); // Set motor to minimum
     else disableMotor();
   }
+  else if (currentI2CInstruction == 8) {
+    // Blink LED
+    while (Wire.available() < 4) {
+      // Wait until we recieve the four bytes we need
+    }
+    
+    unsigned int blinkPeriod = int(readWordWire());    
+    unsigned int blinkCount = readWordWire();
+
+#ifdef UART_COMMS_DEBUG
+    Serial.printf("Blinking LED for %d ms, %d times.\n", blinkPeriod, blinkCount);
+#endif
+
+    setNonBlockingBlink(blinkPeriod, blinkCount); // Needs to be non-blocking since this is in an interrupt
+    
+  }
+  else if (currentI2CInstruction == 9) {
+    // Buzzing
+    
+    while (Wire.available() < 4) {
+      // Wait until we recieve the four bytes we need
+    }
+
+    unsigned int buzzPeriod = readWordWire();
+    unsigned int buzzDuration = readWordWire();
+
+#ifdef UART_COMMS_DEBUG    
+    Serial.printf("Buzzing with period of %d us for %d ms.\n", buzzPeriod, buzzDuration);
+#endif
+
+    setToBuzz(buzzPeriod, buzzDuration);
+  }
 
   // Clear buffer of any other fluff
   while (Wire.available()) {
