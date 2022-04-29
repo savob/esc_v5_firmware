@@ -28,6 +28,7 @@ void setup() {
   
   // Alert user set up is complete
   LEDBlinkBlocking(250, 20); // Lights before buzing to get code on before motor goes
+  buzz(1000,1000);
 
   LEDOn();
 }

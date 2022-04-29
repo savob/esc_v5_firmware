@@ -418,12 +418,12 @@ void buzz(int periodMicros, int durationMillis) { // Buzz with a period of
   periodMicros = constrain(periodMicros, minBuzzPeriod, maxBuzzPeriod);
 
   /*
-    Buzz works by powering one motor phase (AHBL) for 50 us then holding off
-    for the remainder of half the period, then fires another phase (AHCL)
-    for 50 us before holding for the rest of the period.
+    Buzz works by powering one motor phase (AHBL) for a few us then holding off
+    for the remainder of half the period, then fires another phase (AHCL) before 
+    holding for the rest of the period.
   */
 
-  const unsigned int holdOn = 50;                         // Time the motor is pulled high (microseconds)
+  const unsigned int holdOn = 10;                         // Time the motor is pulled high (microseconds)
   int holdOff = (periodMicros / 2) - holdOn;              // Gets this holdoff period
   unsigned long endOfBuzzing = millis() + durationMillis; // Marks endpoint
 
