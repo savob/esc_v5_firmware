@@ -11,7 +11,7 @@ extern volatile voidFunctionPointer motorSteps[6]; // Stores the functions to co
 extern volatile voidFunctionPointer bemfSteps[6]; // Stores the functions to set the BEMF in the current commutation order
 
 // PWM variables
-extern volatile byte maxDuty;    // Upper limit to PWM (MUST be less than 256)
+extern const byte maxDuty;       // Upper limit to PWM (MUST be less than 256)
 extern volatile byte duty;       // Current PWM duty
 extern const byte minDuty;       // Stores minimum allowed duty
 

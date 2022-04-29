@@ -6,7 +6,7 @@ volatile voidFunctionPointer motorSteps[6]; // Stores the functions to copmmute 
 volatile voidFunctionPointer bemfSteps[6]; // Stores the functions to set the BEMF in the current commutation order
 
 // PWM variables
-volatile byte maxDuty = 249; // MUST be less than 256
+const byte maxDuty = 249; // MUST be less than 256
 volatile byte duty = 100;
 const byte minDuty = 25;     // Stores minimum allowed duty
 
@@ -24,11 +24,14 @@ volatile bool reverse = false;
 volatile bool motorStatus = false; // Stores if the motor is disabled (false) or not
 
 // Spin up constants/variables
-// Test motor is from an old DVD player if I recall correctly, max RPM expected is about 1600.
-const unsigned int spinUpStartPeriod = 3000;    // Starting period for each motor step (microseconds)
+const unsigned int spinUpStartPeriod = 2000;    // Starting period for each motor step (microseconds)
 const unsigned int spinUpEndPeriod = 500;       // Final step period for motor
 const byte stepsPerIncrement = 6;               // Number of steps before period is decremented
 const unsigned int spinUpPeriodDecrement = 10;  // How much the period is decremented each cycle
+const int stepsNeeded = (spinUpStartPeriod - spinUpEndPeriod) / spinUpPeriodDecrement; // Spin up period steps
+
+const byte spinUpMaxDuty = maxDuty / 4;         // The PWM reached at the end of spin up
+const float spinUpPWMIncrement = float(spinUpMaxDuty - minDuty) / float(stepsNeeded); // How much PWM is raised with each spin up cycle
 
 // Buzzer period limits
 const unsigned int maxBuzzPeriod = 2000;
@@ -159,12 +162,14 @@ void windUpMotor() {
 
   // Reset motor to base state
   allLow();
-  setPWMDuty(maxDuty); // Need maximum PWM for wind up
+  setPWMDuty(minDuty); // Start with minimum PWM for wind up
 
   LEDOff(); // Used to indicate wind up start
 
   int period = spinUpStartPeriod;
 
+  int spinUpStep = 0; 
+  
   while (period > spinUpEndPeriod) {
 
     for (byte i = 0; i < stepsPerIncrement; i++) {
@@ -175,6 +180,11 @@ void windUpMotor() {
       sequenceStep %= 6;
     }
     period -= spinUpPeriodDecrement;
+
+    // Raise PWM with rotational speed of motor
+    spinUpStep++;
+    byte newPWM = minDuty + (spinUpStep * spinUpPWMIncrement);
+    setPWMDuty(newPWM);
   }
 
 #ifdef UART_COMMS_DEBUG
