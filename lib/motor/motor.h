@@ -116,7 +116,7 @@ unsigned int getCurrentRPM(); // Returns current RPM
 void setToBuzz(unsigned int period, unsigned int duration);
 
 /** @name runInterruptBuzz
-   *  @brief Runs a buzz when called if an interrupt called for one
+   *  @brief Runs a buzz that was called for within an interrupt using "setToBuzz"
    */
 void runInterruptBuzz();
 
