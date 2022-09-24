@@ -1,4 +1,8 @@
 #include "i2c.h"
+#include <Wire.h>
+#include "led.h"
+#include "motor.h"
+#include "uartcomms.h"
 
 byte i2cAddress = 10;      // I2C address. Starts with a default, then adds offset according to soldering pads
 byte currentI2CInstruction = 0;

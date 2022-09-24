@@ -6,12 +6,6 @@
 
 #include <Arduino.h>
 
-extern const byte LEDpin; // LED pin number
-
-extern unsigned long nonBlockToggleTime;  // Records next toggle time for LED when not blocking
-extern unsigned int nonBlockTogglePeriod; // Records current toggle period for LED when not blocking
-extern unsigned int nonBlockTogglesLeft;  // Keeps track of remaining toggles for non-blocking blink
-
 ////////////////////////////////////////////////////////////
 // Function declarations
 

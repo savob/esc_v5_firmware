@@ -1,5 +1,8 @@
 #include "motor.h"
 #include "led.h"
+#include "uartcomms.h"
+
+typedef void(*voidFunctionPointer)(); // Used for making commutation arrays
 
 volatile byte sequenceStep = 0; // Stores step in spinning sequence
 volatile voidFunctionPointer motorSteps[6]; // Stores the functions to copmmute in the current commutation order
@@ -8,7 +11,7 @@ volatile voidFunctionPointer bemfSteps[6]; // Stores the functions to set the BE
 // PWM variables
 const byte maxDuty = 249; // MUST be less than 256
 volatile byte duty = 100;
-const byte minDuty = 25;     // Stores minimum allowed duty
+const byte minDuty = maxDuty * 0.05;     // Stores minimum allowed duty
 
 // Other variables
 volatile byte cyclesPerRotation = 2;
@@ -24,13 +27,13 @@ volatile bool reverse = false;
 volatile bool motorStatus = false; // Stores if the motor is disabled (false) or not
 
 // Spin up constants/variables
-const unsigned int spinUpStartPeriod = 2000;    // Starting period for each motor step (microseconds)
+const unsigned int spinUpStartPeriod = 2500;    // Starting period for each motor step (microseconds)
 const unsigned int spinUpEndPeriod = 500;       // Final step period for motor
 const byte stepsPerIncrement = 6;               // Number of steps before period is decremented
 const unsigned int spinUpPeriodDecrement = 10;  // How much the period is decremented each cycle
 const int stepsNeeded = (spinUpStartPeriod - spinUpEndPeriod) / spinUpPeriodDecrement; // Spin up period steps
 
-const byte spinUpMaxDuty = maxDuty / 4;         // The PWM reached at the end of spin up
+const byte spinUpMaxDuty = maxDuty * 0.3;         // The PWM reached at the end of spin up
 const float spinUpPWMIncrement = float(spinUpMaxDuty - minDuty) / float(stepsNeeded); // How much PWM is raised with each spin up cycle
 
 // Buzzer period limits
@@ -44,6 +47,24 @@ volatile unsigned int interruptBuzzDuration = 0;
 // Commutation variables used to extend the possible step duration
 volatile unsigned int countAtCommutation; // Variable used to store TCB0 count when commutated (used to predict rollover)
 const unsigned int timerDebounce = 500; 
+
+// Function Prototypes
+void AHBL();      // Set A high, B low, C floating
+void AHCL();      // Set A high, C low, B floating
+void BHCL();      // Set B high, C low, A floating
+void BHAL();      // Set B high, A low, C floating
+void CHAL();      // Set C high, A low, B floating
+void CHBL();      // Set C high, B low, A floating
+
+// Comparator configuration functions 
+void aRisingBEMF();   // Set AC to interrupt on A rising edge 
+void aFallingBEMF();  // Set AC to interrupt on A falling edge 
+void bRisingBEMF();   // Set AC to interrupt on B rising edge 
+void bFallingBEMF();  // Set AC to interrupt on B falling edge 
+void cRisingBEMF();   // Set AC to interrupt on C rising edge 
+void cFallingBEMF();  // Set AC to interrupt on C falling edge 
+
+
 
 void setupMotor() {
   //==============================================
@@ -320,7 +341,8 @@ ISR(TCB0_INT_vect) {
   */
 
   if (TCB0.CCMP > countAtCommutation) {
-
+    
+    // Check for bouncing
     if (TCB0.CCMP < (countAtCommutation + timerDebounce)) {
       TCB0.CNT = TCB0.CCMP;     // Continue the count as if uninterrupted
       return;
@@ -333,7 +355,7 @@ ISR(TCB0_INT_vect) {
     // Likely a rollover occured, so we need to add time for the first phase
     outputCount = 32768 + (TCB0.CCMP / 2); 
 
-    // Check for debouncing, but need to half the threshold to match the "halved" period measured
+    // Check for bouncing, but need to half the threshold to match the "halved" period measured
     if (outputCount < ((countAtCommutation/2) + (timerDebounce/2))) {
       TCB0.CNT = TCB0.CCMP;     // Continue the count as if uninterrupted
       return;

@@ -2,13 +2,6 @@
 #define ESC_MOTOR_HEADER
 
 #include <Arduino.h>
-#include "uartcomms.h"
-
-typedef void(*voidFunctionPointer)(); // Used for making commutation arrays
-
-extern volatile byte sequenceStep; // Stores step in spinning sequence
-extern volatile voidFunctionPointer motorSteps[6]; // Stores the functions to copmmute in the current commutation order
-extern volatile voidFunctionPointer bemfSteps[6]; // Stores the functions to set the BEMF in the current commutation order
 
 // PWM variables
 extern const byte maxDuty;       // Upper limit to PWM (MUST be less than 256)
@@ -28,15 +21,6 @@ extern volatile unsigned int targetRPM;
 // Motor rotation variables and constants
 extern volatile bool reverse;
 extern volatile bool motorStatus; // Stores if the motor is disabled (false) or not
-
-extern const unsigned int spinUpStartPeriod;
-extern const unsigned int spinUpEndPeriod;
-extern const byte stepsPerIncrement;
-extern const unsigned int spinUpPeriodDecrement;
-
-// Buzzer period limits
-extern const unsigned int maxBuzzPeriod;
-extern const unsigned int minBuzzPeriod;
 
 ////////////////////////////////////////////////////////////
 // Function declarations
@@ -76,13 +60,6 @@ void disableMotor();
    */
 void buzz(int periodMicros, int durationMillis);
 
-void AHBL();      // Set A high, B low, C floating
-void AHCL();      // Set A high, C low, B floating
-void BHCL();      // Set B high, C low, A floating
-void BHAL();      // Set B high, A low, C floating
-void CHAL();      // Set C high, A low, B floating
-void CHBL();      // Set C high, B low, A floating
-
 /** @name allFloat
    *  @brief Sets all motor half-bridges to float, motor coasts to a stop.
    */
@@ -92,15 +69,6 @@ void allFloat();
    *  @brief Pulls all half-bridges low, braking the motor to a sudden stop.
    */
 void allLow();    // Set all outputs to float (braking)
-
-// Comparator configuration functions 
-
-void aRisingBEMF();   // Set AC to interrupt on A rising edge 
-void aFallingBEMF();  // Set AC to interrupt on A falling edge 
-void bRisingBEMF();   // Set AC to interrupt on B rising edge 
-void bFallingBEMF();  // Set AC to interrupt on B falling edge 
-void cRisingBEMF();   // Set AC to interrupt on C rising edge 
-void cFallingBEMF();  // Set AC to interrupt on C falling edge 
 
 /** @name getCurrentRPM
    *  @brief Extrapolate current RPM based on the half-step duration

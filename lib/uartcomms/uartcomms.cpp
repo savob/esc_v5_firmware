@@ -1,5 +1,8 @@
 #include "uartcomms.h"
 
+#include "motor.h"
+#include "led.h"
+
 const uint32_t UART_BAUDRATE = 115200;
 
 void uartSetup() {
