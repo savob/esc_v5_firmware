@@ -5,16 +5,11 @@
 
 const byte PWMInPinMask = PIN3_bm;
 
-volatile unsigned long lastPWMRise = 0;
-volatile unsigned long lastPWMFall = 0;
-volatile unsigned int lastPWMDutyPeriod = 0;
-
 volatile unsigned long PWMTimeOutMark = 0; // Records when to alert control timeout with millis()
 const unsigned int PWMTimeOutPeriod = 1000; // Tolerated timeout for PWM waves in ms
 
 const unsigned int PWMPeriodMax = 2000; // Maximum expected PWM period
 const unsigned int PWMPeriodMin = 1000; // Minimum expected PWM period
-
 
 
 void pwmInputSetup() {
@@ -24,6 +19,10 @@ void pwmInputSetup() {
 
 // All interrupts on a port are handled by one interrupt
 ISR(PORTA_PORT_vect) {
+
+  static unsigned long lastPWMRise = 0;
+  static unsigned long lastPWMFall = 0;
+  static unsigned int lastPWMDutyPeriod = 0;
 
   unsigned long currentMicros = micros(); // Record micros at start
   unsigned int temp = 0;
